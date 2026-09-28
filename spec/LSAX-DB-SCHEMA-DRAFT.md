@@ -1,6 +1,9 @@
 # LSAX — Persistence Contract & SQLite Schema Draft
 
-Document: LSAX-DB-SCHEMA-DRAFT.md · Spec: LSAX MASTER SPEC v1.0 DRAFT1 · Status: DRAFT for independent audit
+Document: LSAX-DB-SCHEMA-DRAFT.md · Spec: LSAX MASTER SPEC v1.0 DRAFT2 · Status: DRAFT for independent re-audit
+
+DRAFT2: two database files (D-DB-4, audit P2-01), save ledger/slot state (D-SL-13), `apply_status` (D-TX-4), system
+transactions (D-JRN-1), lossless identity indexes (D-ID-7), MT state in the ledger (D-TIME-2), no LEGACY title (D-PROV-1).
 
 ## 1. Engine and connection contract
 
@@ -8,19 +11,23 @@ Document: LSAX-DB-SCHEMA-DRAFT.md · Spec: LSAX MASTER SPEC v1.0 DRAFT1 · Statu
 |---|---|---|
 | Engine | SQLite 3 via `Microsoft.Data.Sqlite` (netstandard2.0 on net48) + `SQLitePCLRaw` bundle | DESIGN DECISION; loading inside SHVDN = OPEN RISK R-DB-1 (E6-4) |
 | Native library | pre-loaded with `LoadLibraryW(<scripts>/LSAX/native/x64/e_sqlite3.dll)` before first use; loaded module path verified and logged | DESIGN DECISION D-DB-3 → P-DB-01 |
-| File | `<scripts>/LSAX/data/lsax.db` (+ `-wal`, `-shm`) | DESIGN DECISION |
-| Pragmas | `journal_mode=WAL`, `synchronous=FULL`, `foreign_keys=ON`, `busy_timeout=2000`, `cache_size=-8192` (8 MiB), `temp_store=MEMORY`, `wal_autocheckpoint=1000` | DESIGN DECISION |
-| Threading | one **DB worker thread** owns the only read-write connection; the script thread submits jobs; money-path jobs (PREPARE, COMMIT) are awaited synchronously with a 250 ms timeout (timeout before apply → abort; timeout on COMMIT → state stays PREPARED → recovered by §7 of the TSM) | DESIGN DECISION |
-| Shutdown | `Aborted`: flush stop marker (memory values only), close connection; queued non-critical writes (odometer checkpoints) may be lost — bounded to one checkpoint interval | DESIGN DECISION |
+| Files (D-DB-4) | `<scripts>/LSAX/data/lsax.db` = schema `main`: journal + global tables + `applied_idem` (authoritative); `<scripts>/LSAX/data/lsax_proj.db` ATTACHed as schema `proj`: projection tables + `projection_meta` watermark (derived, rebuildable). Each with `-wal`, `-shm` | DESIGN DECISION (regression verified) |
+| Pragmas | both: `journal_mode=WAL`, `foreign_keys=ON`, `busy_timeout=2000`, `cache_size=-8192` (8 MiB), `temp_store=MEMORY`, `wal_autocheckpoint=1000`; `main.synchronous=FULL` (every journal commit fsync'd); `proj.synchronous=NORMAL` (derived data: a lost projection commit is detected by the watermark and replayed) | DESIGN DECISION |
+| Commit order (normative) | **journal transaction first** (txn/commit_log/journal_event/applied_idem/reservation rows, one SQLite transaction on `main`), **then** the projection transaction on `proj` (projection rows + watermark = journal position). SQLite does not make a WAL-mode transaction atomic across attached files, so none is assumed: the projection may lag the journal, never lead it. Any watermark ≠ active-path head → catch-up replay before the next transaction (§8 step 3) | DESIGN DECISION (regression B3) |
+| Threading | one **DB worker thread** owns the only read-write connection; the script thread submits jobs; money-path jobs (PREPARE, COMMIT) are awaited synchronously with a 250 ms timeout (timeout before apply → abort; timeout/failure on COMMIT after the apply → same-tick compensation, else FAULT — TSM §4 step 6) | DESIGN DECISION |
+| Shutdown | `Aborted`: flush LSAX's own memory (apply status of a PREPARED txn, MT state, p_last), close the connection; queued coalescible checkpoints may be lost — bounded to one checkpoint interval (TSM §3a) | DESIGN DECISION |
 | Time columns | `*_mt` INTEGER (MT minutes), `*_p` INTEGER (play-time ms), `*_wall` INTEGER (UTC ms) | per LSAX-TIME-MODEL.md |
 | Money columns | INTEGER whole dollars, `CHECK (x BETWEEN -2000000000 AND 2000000000)` (GTA wallet is int32) | DESIGN DECISION |
 
 ## 2. Layers
 
-1. **Journal (authoritative):** campaigns, timelines, transactions, commits with ordered domain events, save-slot
-   ledger, runtime markers. Append-only except transaction state transitions.
-2. **Projection (derived, rebuildable):** current state of the active timeline path (vehicles, ownership,
-   listings, …). Rebuilt from the nearest snapshot + replay of events along the path. Carries a watermark.
+1. **Journal (authoritative, file `lsax.db`, schema `main`):** campaigns, timelines, transactions, commits with
+   ordered domain events, save ledger, slot state, runtime markers, the active-path idempotency set `applied_idem`
+   (maintained in the same SQLite transaction as each commit; recomputed on every fork). Append-only except
+   transaction state transitions.
+2. **Projection (derived, rebuildable, file `lsax_proj.db`, schema `proj`):** current state of the active timeline
+   path (vehicles, ownership, listings, …). Rebuilt from the nearest valid snapshot + replay of events along the
+   path. Carries a watermark `(timeline_id, seq, head_txn)`.
 3. **Global (never timeline-coupled):** schema meta, catalogue overrides, audit log, counters.
 
 ## 3. DDL draft
@@ -64,15 +71,15 @@ CREATE TABLE slot_state (slot_file TEXT PRIMARY KEY, mtime_wall INTEGER NOT NULL
   sha256 TEXT NOT NULL, status TEXT NOT NULL CHECK (status IN ('TRUSTED','PRE_INSTALL','UNTRUSTED')),
   reason TEXT NOT NULL CHECK (reason IN ('OBSERVED','KNOWN_CONTENT','RESTORED_COPY','PRE_INSTALL','CHANGED_WHILE_DOWN',
     'FOREIGN_WHILE_RUNNING','AMBIGUOUS_EVENT','DURING_RECONCILE')), updated_wall INTEGER NOT NULL);
+CREATE TABLE applied_idem (idem_key TEXT PRIMARY KEY, txn_id TEXT NOT NULL);   -- main: active-path idem set (TSM §3a)
 CREATE TABLE runtime_state (key TEXT PRIMARY KEY, value TEXT NOT NULL);
   -- active_timeline, reconcile (0|1), reconcile_reason, reconcile_candidates, session_token, proc_id, proc_start,
   -- p_last, stop_clean, missed_start (process identity of a failed start), fault (D-TX-5)
 CREATE TABLE deal (deal_id TEXT PRIMARY KEY, state TEXT NOT NULL, listing_id TEXT, offer_id TEXT, txn_id TEXT,
   hold_expires_mt INTEGER, retry_left INTEGER NOT NULL, params_json TEXT NOT NULL);  -- timeline-coupled via events
 
--- ===== projection (derived; rebuilt per active path) =====
+-- ===== projection (schema proj, file lsax_proj.db; derived; rebuilt per active path) =====
 CREATE TABLE projection_meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);           -- head_txn, timeline_id, rebuilt_wall
-CREATE TABLE applied_idem (idem_key TEXT PRIMARY KEY, txn_id TEXT NOT NULL);         -- active-path idempotency set (TSM §3a)
 CREATE TABLE vehicle (vehicle_id TEXT PRIMARY KEY, lsax_vin TEXT NOT NULL UNIQUE, model_hash INTEGER NOT NULL,
   model_name TEXT, birth_mt INTEGER NOT NULL,
   lifecycle TEXT NOT NULL CHECK (lifecycle IN ('VIRTUAL','ACTIVE','DORMANT','MISSING','DESTROYED','RETIRED','MODEL_UNAVAILABLE')),
@@ -148,14 +155,23 @@ emit them:
 Replaying events of a path in `(timeline, seq, ord)` order reproduces the projection bit-for-bit (T-DB-3); replaying
 twice gives the same result.
 
-## 5. Snapshots and rebuild
+## 5. Snapshots, backups and rebuild (normative, D-DB-4; audit P2-01)
 
-- Every 200 commits on a path, and at session end, the DB worker writes a projection snapshot using the SQLite
-  online backup API into `data/snapshots/<head_txn>.db` (projection tables only). Retain the 8 newest + any
-  snapshot that is the nearest ancestor of a ledger-referenced state.
-- Rebuild (after anchoring to a state ≠ current projection head): choose the nearest snapshot whose head is on the
-  target path; restore; replay events forward. Bound: ≤ 200 commits replay ≈ < 1 s (budget in
-  LSAX-PERFORMANCE-BUDGET.md; runs during the session-start grace period, market frozen until done).
+| Artefact | Mechanism (exact) | When | Retention |
+|---|---|---|---|
+| **Projection snapshot** | SQLite online backup of schema `proj` only: `live.BackupDatabase(snapshotConn, "main", "proj")` (Microsoft.Data.Sqlite overload `BackupDatabase(SqliteConnection destination, string destinationName, string sourceName)`, present in the netstandard2.0 build 8.0.11; P-DB-01 executes it) into `data/snapshots/<timeline>-<seq>.db`. Because the projection is its own database file, the backup contains exactly the projection tables and its watermark — nothing else | every 200 commits on a path, and at session end (DB worker thread) | 8 newest + every snapshot that is the nearest ancestor of a save-ledger head |
+| **Journal backup** (disaster recovery) | SQLite online backup of schema `main`: `live.BackupDatabase(backupConn, "main", "main")` into `data/backup/lsax-<wall>.db` | at session end, before every migration (§7) | 3 newest |
+| **Rebuild after anchoring** | if the projection watermark is not on the target path: choose the newest snapshot whose watermark is an ancestor of the target head (a snapshot off the target path is never used), restore it into `proj` (`snapshotConn.BackupDatabase(live, "proj", "main")`), then replay journal events from the watermark to the target head; no usable snapshot → rebuild from an empty projection | during the session-start grace period; market frozen until done | — |
+| **Catch-up** | watermark on the path but behind the head (crash between the two commits, lost `synchronous=NORMAL` commit) → replay the missing positions | startup; before any transaction | — |
+| **Projection loss** | `lsax_proj.db` missing or failing `quick_check` → delete, recreate, rebuild from the journal | startup | — |
+
+Consistency of an online backup: SQLite restarts a backup step when the source is modified by another connection
+and updates the backup when it is modified through the same connection, so every snapshot equals the projection at
+its own watermark. Regression `phase0-probes/regress/regress_p2_01_backup.py` (11 checks, real SQLite backup API):
+snapshot contains only projection tables + watermark; journal backup contains only journal tables; crash between
+the commits → watermark lags (never leads) and catch-up equals a full rebuild; deleted projection rebuilt
+identically; snapshot restore + replay on an ancestor path equals rebuild; off-path snapshot rejected; snapshot
+taken during concurrent writes is self-consistent; pragmas as specified. Bound: ≤ 200 commits replay ≈ < 1 s.
 
 ## 6. Growth and retention
 
@@ -164,8 +180,9 @@ twice gives the same result.
 | Commit + events | ~1.5 KiB per transaction | 50 000 commits ≈ 75 MiB |
 | Odometer/MT checkpoints | 1 row/min driving → ~60 rows/h | coalesced: keep 1 per 10 km per vehicle older than 30 MT days |
 | NPC virtual vehicles | ≤ 600 live listings + ≤ 3 000 retired within 30 MT days | retired VIRTUAL vehicles older than 30 MT days compacted to summary rows |
-| Orphaned branches | variable | compacted after 30 MT days if not referenced by the slot ledger (LSAX-SAVELOAD-FEASIBILITY.md §4.8) |
-| Snapshots | ≤ 8 × projection size | pruned |
+| Orphaned branches | variable | compacted after 30 MT days if not referenced by the save ledger (LSAX-SAVELOAD-FEASIBILITY.md §4.10) |
+| Projection snapshots | ≤ 8 (+ ledger-referenced) × projection size | pruned |
+| Journal backups | 3 × journal size | oldest deleted |
 | Audit log | ~200 B/entry | ring: newest 100 000 |
 
 Target: DB < 250 MiB after 200 h of play (T-PERF-6). `VACUUM` never during play; offered as a debug command.
@@ -174,7 +191,8 @@ Target: DB < 250 MiB after 200 h of play (T-PERF-6). `VACUUM` never during play;
 
 - `schema_version` integer; migrations are forward-only, numbered, idempotent SQL scripts embedded as resources
   with SHA-256; applied in one transaction each, recorded in `schema_migration`.
-- Before any migration: online backup to `data/backup/lsax-v<from>-<wall>.db` (retain 3).
+- Before any migration: journal backup (§5) to `data/backup/lsax-v<from>-<wall>.db` (retain 3); the projection
+  is simply rebuilt after the migration.
 - Opening a DB with a **newer** `schema_version` than the build knows → refuse to open, disable LSAX with a
   localised message (safe refusal). Downgrades are not supported.
 - Every migration ships with a fixture DB of the previous version and a test that migrates it and compares a
@@ -184,7 +202,8 @@ Target: DB < 250 MiB after 200 h of play (T-PERF-6). `VACUUM` never during play;
 
 1. Open → `PRAGMA quick_check` (bounded to 2 s; if longer, continue and schedule a full check at next start).
 2. Failure → open read-only, LSAX transactions disabled, localised prompt to restore the newest backup.
-3. Projection watermark ≠ journal head of the active path → rebuild (§5).
+3. Projection watermark ≠ journal head of the active path → catch-up or rebuild (§5); no transaction is accepted
+   until the watermark equals the head.
 4. Anchoring (LSAX-SAVELOAD-FEASIBILITY.md §4.3) and PREPARED-txn resolution (TSM §7).
 5. Clamp-on-read for legacy/corrupt values is **not** silent: out-of-range values fail CHECK constraints; the
    repair tool logs `DATA_REPAIR` audit entries (clamping odometer to 0…10 M km, condition to 0…1000).

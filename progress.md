@@ -184,7 +184,13 @@ the audited branch `claude/focused-thompson-ilnspm`, DRAFT1 files, PR #1 or `mai
       AX-5, DB-SCHEMA title CHECK, decisions, RISK-REGISTER/risks R-PROV-1. Regression regress/regress_p1_06_legacy.py
       75/75 PASS (stolen, ambient, mission, trainer, add-on, legit pre-LSAX, trainer copy of a story car, each with/
       without opt-in and garage; exhaustive title reachability).
-- [ ] C0-12 Correct P2-01 backup architecture
+- [x] C0-12 Correct P2-01 backup architecture
+      D-DB-4 (refined): lsax.db (journal, FULL) + lsax_proj.db attached as proj (projection, NORMAL); journal commit
+      first, projection second (lag never lead; catch-up gate); snapshot = online backup of schema proj
+      (BackupDatabase(dest,"main","proj") — overload verified in Microsoft.Data.Sqlite 8.0.11 netstandard2.0 XML docs;
+      executed by P-DB-01 in C0-15); journal backup = online backup of main; rebuild from newest ancestor snapshot.
+      applied_idem moved to main (dedupe must be atomic with the journal commit). Files: DB-SCHEMA §1/§2/§3/§5/§6/§7/§8,
+      PERFORMANCE §2, decisions. Regression regress/regress_p2_01_backup.py 11/11 PASS (real SQLite backup API).
 - [ ] C0-13 Reconcile all affected documents
 - [ ] C0-14 Add/run deterministic regression suite
 - [ ] C0-15 Review/prepare P-SL-01 and P-DB-01
@@ -207,4 +213,4 @@ the audited branch `claude/focused-thompson-ilnspm`, DRAFT1 files, PR #1 or `mai
 | P1-04 | SOURCE VERIFIED: DB-SCHEMA L48 `journal_event.txn_id NOT NULL REFERENCES txn`; L118 event types incl. OdometerCheckpoint/MarketStep/MtCheckpoint/HeatDelta; TSM §3 has no system kind | CORRECTED (C0-09): D-JRN-1, TSM §3a; regress_p1_04_sysjournal 68/68 PASS |
 | P1-05 | SOURCE VERIFIED: NPC-GEN L17 and DOMAIN L69 `(campaign_seed, market_day, segment, slot)`; MASTER §11 market step every 60 MT min (24 steps/day); slot scope undefined. REPRODUCED with baseline `npcgen_ref.generate` + `derive_seed("vehicle",…)`: two steps of MT day 42 with step-local slots 0..2 → 3/3 identical VehicleIds and byte-identical vehicles. Also observed: raw FNV-1a ids differ only in a few hex digits (weak avalanche) → correction uses a mixing finaliser | CORRECTED (C0-10): D-GEN-6 injective identity; regress_p1_05_npc_identity 17/17 PASS |
 | P1-06 | SOURCE VERIFIED: DOMAIN L191 LEGACY "treated as CLEAN / eligible", L203; TSM L104; MASTER L190. Additional (self-found): DOMAIN title diagram `UNKNOWN --> CLEAN: title verification passed` — verification only checks STOLEN records, so a pre-LSAX/unobserved theft also launders | CORRECTED (C0-11): D-PROV-1; regress_p1_06_legacy 75/75 PASS |
-| P2-01 | SOURCE VERIFIED: DB-SCHEMA L127 "online backup API … (projection tables only)"; the backup API copies a whole database (schema), not tables | verified |
+| P2-01 | SOURCE VERIFIED: DB-SCHEMA L127 "online backup API … (projection tables only)"; the backup API copies a whole database (schema), not tables | CORRECTED (C0-12): D-DB-4 two files + proj-schema backup; regress_p2_01_backup 11/11 PASS |
