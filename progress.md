@@ -33,11 +33,11 @@ feasibility.md and continue from the first item not marked [x]. Do not restart P
       [ ] LSAX-MASTER-SPEC-v1.0.md (sections 00..30 + appendices per 03-*.md)
       [ ] LSAX-DOMAIN-MODEL.md          [ ] LSAX-SAVELOAD-FEASIBILITY.md
       [ ] LSAX-TIME-MODEL.md            [ ] LSAX-DB-SCHEMA-DRAFT.md
-      [ ] LSAX-VALUATION-MODEL.md       [ ] LSAX-NPC-GENERATION-MODEL.md
-      [ ] LSAX-HEAT-AND-UNDERGROUND-MODEL.md
+      [x] LSAX-VALUATION-MODEL.md       [x] LSAX-NPC-GENERATION-MODEL.md
+      [x] LSAX-HEAT-AND-UNDERGROUND-MODEL.md
       [ ] LSAX-TRANSACTION-STATE-MACHINE.md
-      [ ] LSAX-COMPATIBILITY-CONTRACT.md [ ] LSAX-PERFORMANCE-BUDGET.md
-      [ ] LSAX-LOCALIZATION-CONTRACT.md [ ] LSAX-TEST-STRATEGY.md
+      [x] LSAX-COMPATIBILITY-CONTRACT.md [x] LSAX-PERFORMANCE-BUDGET.md
+      [x] LSAX-LOCALIZATION-CONTRACT.md [x] LSAX-TEST-STRATEGY.md
       [ ] LSAX-STAGE-ACCEPTANCE.md      [ ] LSAX-RISK-REGISTER.md
       [ ] LSAX-REFERENCE-REVIEW.md
       [ ] progress.md decisions.md risks.md feasibility.md
@@ -80,9 +80,9 @@ feasibility.md and continue from the first item not marked [x]. Do not restart P
 - [ ] P0-06 Spec documents (spec/)
       [x] LSAX-REFERENCE-REVIEW.md  [x] LSAX-SAVELOAD-FEASIBILITY.md  [x] LSAX-TIME-MODEL.md
       [x] LSAX-DOMAIN-MODEL.md      [x] LSAX-TRANSACTION-STATE-MACHINE.md  [x] LSAX-DB-SCHEMA-DRAFT.md
-      [ ] LSAX-VALUATION-MODEL.md   [ ] LSAX-NPC-GENERATION-MODEL.md  [ ] LSAX-HEAT-AND-UNDERGROUND-MODEL.md
-      [ ] LSAX-LOCALIZATION-CONTRACT.md  [ ] LSAX-COMPATIBILITY-CONTRACT.md  [ ] LSAX-PERFORMANCE-BUDGET.md
-      [ ] LSAX-TEST-STRATEGY.md     [ ] LSAX-STAGE-ACCEPTANCE.md  [ ] LSAX-RISK-REGISTER.md
+      [x] LSAX-VALUATION-MODEL.md   [x] LSAX-NPC-GENERATION-MODEL.md  [x] LSAX-HEAT-AND-UNDERGROUND-MODEL.md
+      [x] LSAX-LOCALIZATION-CONTRACT.md  [x] LSAX-COMPATIBILITY-CONTRACT.md  [x] LSAX-PERFORMANCE-BUDGET.md
+      [x] LSAX-TEST-STRATEGY.md     [ ] LSAX-STAGE-ACCEPTANCE.md  [ ] LSAX-RISK-REGISTER.md
       [ ] LSAX-MASTER-SPEC-v1.0.md (sections 00-30 + appendices, SPEC_APPROVED checklist)
 - [ ] P0-07 Self-audit / consistency pass
 - [ ] P0-08 SHA-256 manifest + LSAX-MASTER-SPEC-v1.0-DRAFT1.zip
