@@ -53,7 +53,7 @@ Stage gates additionally require the listed L3 runs (LSAX-STAGE-ACCEPTANCE.md).
 | ID | Area | Test | Pass |
 |---|---|---|---|
 | T-SL-1 | save/load model | C# port of the DRAFT2 `journal_timeline_ref.py`: both mixes, G = 1 ms and 1 000 ms, default 60 episodes (fast) and 200 (audit grade) | 0 safety-invariant failures; non-vacuity and full path-coverage tripwires as in the reference |
-| T-SL-2 | anchoring | port of `regress_p0_03_save_lineage.py` (23 cases: foreign/older/newer copies, collisions, forged fingerprint, multiple slots, repeated restart, continuation, rollback, missed start, pre-install, new game, residual R-SL-7 demo) and `regress_audit_repro.py` | expected verdict per case |
+| T-SL-2 | anchoring | port of `regress_p0_03_save_lineage.py` (26 cases: foreign/older/newer copies, collisions, forged fingerprint, multiple slots, repeated restart, continuation, rollback, missed start, pre-install, new game, asynchronous saves and the save gate, residual R-SL-7 demo) and `regress_audit_repro.py` | expected verdict per case |
 | T-TX-4 | recovery | crash injection at C0/C1/CA/CB/C2/C3 × {clean reload, unclean same session, downtime with other-mod cash writes, token lost, game crash + load} × external cash ∈ {none, = wallet_before, = wallet_after} (TSM §10 matrix) | matrix 100 %; verdict never depends on wallet values; roll-forward only on own APPLIED + session token |
 | T-TX-5 | concurrency | fake Crime-Jobs cash write between PREPARE and apply | ABORTED_CONCURRENT_CASH |
 | T-DB-1 | schema | create from scratch; all CHECK constraints reject out-of-range values | 100 % |
@@ -69,7 +69,7 @@ Stage gates additionally require the listed L3 runs (LSAX-STAGE-ACCEPTANCE.md).
 
 | ID | Area | Test | Pass |
 |---|---|---|---|
-| P-SL-01/02, P-ID-01, P-DB-01 | Phase 0 probes | `phase0-probes/README-PROBES.md` | PC-1…PC-5 (B-01) |
+| P-SL-01/02, P-ID-01, P-DB-01 | Phase 0 probes | `phase0-probes/README-PROBES.md` | PC-1, PC-2, PC-3, PC-4, PC-5, PC-7, PC-8 (B-01); P-DB-01 pass list |
 | T-RT-ID-1 | binding | 20 × each: garage store/retrieve, 1 km stream-out/in, save/load, impound retrieve | correct VehicleId 100 %; 0 wrong binds; ambiguous cases refused |
 | T-ODO-1 | odometer accuracy | drive a fixed 5.0 km route (measured by summed waypoint distance) ×5 | within ±2 % |
 | T-ODO-2 | teleport rejection | trainer teleport 2 km ×10; script teleport (fade + set position) ×10 | 0 m added; `TELEPORT_REJECTED` logged |

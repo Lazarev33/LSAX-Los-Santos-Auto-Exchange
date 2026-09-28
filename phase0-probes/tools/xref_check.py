@@ -16,7 +16,8 @@ import sys
 
 ROOT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
 DOCS = [os.path.join("spec", f) for f in sorted(os.listdir(os.path.join(ROOT, "spec")))] + [
-    "00-INDEX.md", "progress.md", "decisions.md", "risks.md", "feasibility.md", os.path.join("phase0-probes", "README-PROBES.md")]
+    "00-INDEX.md", "progress.md", "decisions.md", "risks.md", "feasibility.md", os.path.join("phase0-probes", "README-PROBES.md"),
+    "LSAX-PHASE0-CORRECTION-1-REPORT.md"]
 REQUIRED = ["LSAX-MASTER-SPEC-v1.0.md", "LSAX-DOMAIN-MODEL.md", "LSAX-SAVELOAD-FEASIBILITY.md", "LSAX-TIME-MODEL.md",
             "LSAX-DB-SCHEMA-DRAFT.md", "LSAX-VALUATION-MODEL.md", "LSAX-NPC-GENERATION-MODEL.md",
             "LSAX-HEAT-AND-UNDERGROUND-MODEL.md", "LSAX-TRANSACTION-STATE-MACHINE.md", "LSAX-COMPATIBILITY-CONTRACT.md",
@@ -115,8 +116,8 @@ def main():
     allowed = re.compile(r"DRAFT1|withdrawn|WITHDRAWN|removed|superseded|SUPERSEDED|no LEGACY|never|There is \*\*no|"
                          r"\bno title|no \S+ path|not |instead of|reproduc|defect|history|no\b", re.I)
     for p, t in texts.items():
-        if p in ("progress.md", "decisions.md"):
-            continue                                   # durable history logs
+        if p in ("progress.md", "decisions.md", "LSAX-PHASE0-CORRECTION-1-REPORT.md"):
+            continue                                   # history logs / the findings report name DRAFT1 defects by design
         for n, line in enumerate(t.splitlines(), 1):
             for pat, label in stale:
                 if re.search(pat, line) and not allowed.search(line):

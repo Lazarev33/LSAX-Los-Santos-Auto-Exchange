@@ -74,6 +74,17 @@ PASS  21 pending APPLIED + game crash + pre-transaction save loaded: LSAX state 
 PASS  21 pending transaction aborted (its effects are not in the loaded world)
 PASS  22 precondition: RECONCILE_REQUIRED
 PASS  22 resolution by explicit player choice restores consistency
+PASS  24 transaction attempted while a save is in progress -> DEFERRED
+PASS  24 ledger head of the async save == head at the snapshot
+PASS  24 load of the async save anchors correctly: anchored automatically
+PASS  24 load of the async save anchors correctly: LSAX state == world
+PASS  24b without the gate the file is attributed to a later head (defect reproduced; gate is necessary)
+PASS  25 bracket of an async save contains the snapshot play-time
+PASS  25 load of an async save with intermediate polls anchors: anchored automatically
+PASS  25 load of an async save with intermediate polls anchors: LSAX state == world
+PASS  25 anchored at the snapshot head
+PASS  26 random async-save histories: gate on -> 0 I0 violations
+PASS  26 random async-save histories: gate off -> violations (non-vacuity of the gate)
 PASS  23 documented residual R-SL-7 reproduces exactly as documented (TM-1 boundary)
-P0-03 save lineage: 73/73 PASS
+P0-03 save lineage: 84/84 PASS
 ```

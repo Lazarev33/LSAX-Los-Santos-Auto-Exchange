@@ -113,15 +113,15 @@ assumptions; it does not prove GTA runtime behaviour.
 
 ## E9 — Correction Pass 1 (DRAFT2) evidence (VERIFIED (sim) unless stated; nothing is runtime)
 
-Reproduce everything with `python3 phase0-probes/sim/run_all.py --audit` (≈ 3.2 min; `run_all.py` without flags
+Reproduce everything with `python3 phase0-probes/sim/run_all.py --audit` (≈ 3.3 min; `run_all.py` without flags
 = fast mode, ≈ 1.5 min). Outputs and source hashes: `evidence/sim/`, `evidence/regress/`.
 
 | ID | Evidence | Result | What it proves / does not prove |
 |---|---|---|---|
 | E9-1 | Auditor reproduction `regress/audit/repro_findings.py`, byte-identical to the audit bundle (SHA-256 `ad8fe27a…6755e`, listed in the bundle's SHA256SUMS), executed unchanged against the DRAFT2 model (`regress_audit_repro.py`) | 7/7 PASS: case A → RECONCILE(PENDING_UNKNOWN), t1 not committed, projection empty; case B → RECONCILE(UNTRUSTED_PRESENT), no slot anchoring | The two audit counterexamples no longer produce unsafe history. |
 | E9-2 | `regress_p0_02_txn_recovery.py` — 432 scenarios: BUY/SELL × 3 wallets × crash C1/CA/CB/C2 × 5 stop modes × external cash {none, = wallet_before, = wallet_after} (+ after-load variants) | 2 304/2 304 PASS; decisions: 108 ABORT, 36 roll-forward, 288 RECONCILE | Wallet values never change a recovery decision; roll-forward only on own flushed APPLIED + session token; repeated restarts stable; replay idempotent. |
-| E9-3 | `regress_p0_03_save_lineage.py` — 23 directed cases | 73/73 PASS; residual R-SL-7 reproduces exactly (reported separately) | Unobserved/foreign files never become lineage; legitimate continuation, rollback and restored copies still anchor. Depends on A-SL-1/5/6/7/8/10/12/14 (B-01). |
-| E9-4 | `journal_timeline_ref.py --episodes 200` (DRAFT2 model) | PASS: 800 episodes, 4 522 injected crashes, 90 missed starts, 0 safety-invariant failures, full path coverage; RECONCILE realistic 17.1–18.3 %, adversarial 58.2–58.3 %; 159 s | Random-history safety of the corrected model; the RECONCILE rate is a model property under a crash-heavy mix (R-SL-3), not a runtime measurement. |
+| E9-3 | `regress_p0_03_save_lineage.py` — 26 directed cases | 84/84 PASS (incl. asynchronous saves: gate on correct, gate off defect reproduced); residual R-SL-7 reproduces exactly (reported separately) | Unobserved/foreign files never become lineage; legitimate continuation, rollback and restored copies still anchor. Depends on A-SL-1/5/6/7/8/10/12/14 (B-01). |
+| E9-4 | `journal_timeline_ref.py --episodes 200` (DRAFT2 model incl. asynchronous saves) | PASS: 800 episodes, 4 447 injected crashes, 79 missed starts, 2 725 gate deferrals, 0 safety-invariant failures, full path coverage; RECONCILE realistic 22.8–24.7 %, adversarial 59.7–60.8 %; 159 s | Random-history safety of the corrected model; the RECONCILE rate is a model property under a crash-heavy mix (R-SL-3), not a runtime measurement. |
 | E9-5 | `regress_p0_04_gate.py` static scan | 24/24 PASS; the same scan finds 22 carve-out lines in the DRAFT1 texts | No Stage-1a / partial-stage allowance remains. |
 | E9-6 | `identity_ref.py` (lemma + 3 000 dense random populations) and `regress_p1_01_02_identity.py` | lemma L1/L2 exhaustive OK; DRAFT2 == unbounded reference in 3 000/3 000 (DRAFT1: 79 false BIND, 71 false NO MATCH); regression 34/34 | Handle/decorator/cache never decide identity; the bounded search is lossless. |
 | E9-7 | `time_ref.py`, `regress_p1_03_time.py` | 21/21 PASS (DRAFT1 MT(P) defect reproduced: hours behind after sleep + save; credit lost on crash) | Coherent PT/MT contract; skip credits durable at grant; MT independent of PT semantics. |

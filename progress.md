@@ -223,7 +223,13 @@ the audited branch `claude/focused-thompson-ilnspm`, DRAFT1 files, PR #1 or `mai
       Result on DRAFT2: PASS (282 IDs referenced, all defined). Non-vacuity: the same checker on the DRAFT1 baseline
       tree reports 72 problems (stale terms in all 13 categories + DRAFT1 headers). TM-1 and O-SL-1 defined in the
       MASTER glossary. py_compile of all 29 Python files OK; both C# probes rebuilt clean (C0-15).
-- [ ] C0-17 Rebuild DRAFT2 package and hashes
+- [~] C0-17 Rebuild DRAFT2 package and hashes (in progress at the time this copy was packaged)
+      Before packaging: evidence regenerated with `run_all.py --audit` (ALL PASS, 199.1 s; journal model with
+      asynchronous saves: 800 episodes, 4 447 crashes, 0 safety failures; realistic RECONCILE 22.8-24.7 %;
+      regressions 2 645/2 645); docs updated to these numbers; 00-INDEX.md rewritten for DRAFT2;
+      LSAX-PHASE0-CORRECTION-1-REPORT.md written; package.py -> DRAFT2 with --verify (manifest, xref and a fast
+      run of every model + regression from the extracted ZIP alone); xref_check covers the report. The ZIP hash is
+      recorded in release/LSAX-MASTER-SPEC-v1.0-DRAFT2.zip.sha256 and in the repository copy of this file.
 - [ ] C0-18 Push correction branch
 - [ ] C0-19 Report final status
 
@@ -242,5 +248,9 @@ the audited branch `claude/focused-thompson-ilnspm`, DRAFT1 files, PR #1 or `mai
 | P1-05 | SOURCE VERIFIED: NPC-GEN L17 and DOMAIN L69 `(campaign_seed, market_day, segment, slot)`; MASTER §11 market step every 60 MT min (24 steps/day); slot scope undefined. REPRODUCED with baseline `npcgen_ref.generate` + `derive_seed("vehicle",…)`: two steps of MT day 42 with step-local slots 0..2 → 3/3 identical VehicleIds and byte-identical vehicles. Also observed: raw FNV-1a ids differ only in a few hex digits (weak avalanche) → correction uses a mixing finaliser | CORRECTED (C0-10): D-GEN-6 injective identity; regress_p1_05_npc_identity 17/17 PASS |
 | P1-06 | SOURCE VERIFIED: DOMAIN L191 LEGACY "treated as CLEAN / eligible", L203; TSM L104; MASTER L190. Additional (self-found): DOMAIN title diagram `UNKNOWN --> CLEAN: title verification passed` — verification only checks STOLEN records, so a pre-LSAX/unobserved theft also launders | CORRECTED (C0-11): D-PROV-1; regress_p1_06_legacy 75/75 PASS |
 | P2-01 | SOURCE VERIFIED: DB-SCHEMA L127 "online backup API … (projection tables only)"; the backup API copies a whole database (schema), not tables | CORRECTED (C0-12): D-DB-4 two files + proj-schema backup; regress_p2_01_backup 11/11 PASS |
+| SF-1 (self-found, C0-03) | SOURCE VERIFIED + model: DRAFT1 accepted *continuation* on play-time/wallet correlation (same process), so a foreign save loaded without a process restart could pass | CORRECTED: D-SL-14 session token (C0-05); regress_p0_03 cases 11, 12, 15 |
+| SF-2 (self-found, C0-03) | SOURCE VERIFIED: DOMAIN title diagram `UNKNOWN → CLEAN` via title verification, which only checks STOLEN records (laundering) | CORRECTED: D-PROV-1 (TITLE_VERIFY withdrawn, C0-11); regress_p1_06 reachability checks |
+| SF-3 (self-found, C0-07) | model: explicit confirmation of an AMBIGUOUS lookalike could transfer a registered identity to another vehicle | CORRECTED: D-ID-8 (equal plate or occupied continuity); regress_p1_01_02 H2, H8, H8b |
+| SF-6 (self-found, C0-08) | model: rolling skip-credit cap bookkeeping was not restored with MT, so reloading a pre-sleep save wrongly blocked a legitimate credit | CORRECTED: D-TIME-2 MT state (mt, base_mt, recent credits); regress_p1_03 T9 |
 | SF-4 (self-found, C0-15) | REPRODUCED in the model: asynchronous save write + transaction between snapshot and write → ledger head after the transaction → wrong anchoring (31 I0 violations in 30 adversarial episodes with the gate off) | CORRECTED: D-SL-18 save-in-progress gate; regress_p0_03 cases 24/24b/26 |
 | SF-5 (self-found, C0-15) | REPRODUCED in the model: bracket lower bound at the poll before the file change excludes an async save's own play-time → wrong exclusion → wrong state accepted | CORRECTED: D-SL-17 amended (bracket starts at the last poll before the save signal); regress_p0_03 case 25 |
