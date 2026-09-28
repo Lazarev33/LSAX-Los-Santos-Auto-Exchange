@@ -223,15 +223,24 @@ the audited branch `claude/focused-thompson-ilnspm`, DRAFT1 files, PR #1 or `mai
       Result on DRAFT2: PASS (282 IDs referenced, all defined). Non-vacuity: the same checker on the DRAFT1 baseline
       tree reports 72 problems (stale terms in all 13 categories + DRAFT1 headers). TM-1 and O-SL-1 defined in the
       MASTER glossary. py_compile of all 29 Python files OK; both C# probes rebuilt clean (C0-15).
-- [~] C0-17 Rebuild DRAFT2 package and hashes (in progress at the time this copy was packaged)
+- [x] C0-17 Rebuild DRAFT2 package and hashes
       Before packaging: evidence regenerated with `run_all.py --audit` (ALL PASS, 199.1 s; journal model with
       asynchronous saves: 800 episodes, 4 447 crashes, 0 safety failures; realistic RECONCILE 22.8-24.7 %;
-      regressions 2 645/2 645); docs updated to these numbers; 00-INDEX.md rewritten for DRAFT2;
-      LSAX-PHASE0-CORRECTION-1-REPORT.md written; package.py -> DRAFT2 with --verify (manifest, xref and a fast
-      run of every model + regression from the extracted ZIP alone); xref_check covers the report. The ZIP hash is
-      recorded in release/LSAX-MASTER-SPEC-v1.0-DRAFT2.zip.sha256 and in the repository copy of this file.
-- [ ] C0-18 Push correction branch
-- [ ] C0-19 Report final status
+      regressions 2 645/2 645); 00-INDEX.md rewritten; LSAX-PHASE0-CORRECTION-1-REPORT.md written; package.py ->
+      DRAFT2 with --verify. Built release/LSAX-MASTER-SPEC-v1.0-DRAFT2.zip (95 entries incl. MANIFEST.sha256),
+      SHA-256 4c1e5ed5e54a4418a440ff4600c7faea86b5fa801fce21c59c8dbd943a93aa12 (sidecar .sha256); rebuild is
+      byte-identical; verification from the extracted ZIP alone: manifest 94/94, xref PASS, all models + regressions
+      PASS (fast, 85.3 s). DRAFT1 zip unchanged (281f52f6...). Commit 267f17a. (The progress.md inside the ZIP shows
+      this item as in progress; this repository copy records its completion.)
+- [x] C0-18 Push correction branch
+      `git push -u origin claude/phase0-correction-1` succeeded (267f17a). Remote refs after push: correction branch
+      267f17a; audited branch claude/focused-thompson-ilnspm f6aff47 (unchanged); refs/pull/1/head f6aff47
+      (unchanged); main ec56878 (unchanged). No PR opened or merged.
+- [x] C0-19 Report final status
+      OFFLINE_CORRECTION_COMPLETE — RUNTIME_VALIDATION_REQUIRED. All audit findings P0-02…P2-01 corrected offline
+      with passing deterministic regressions; P0-01 (B-01) preserved as BLOCKED_RUNTIME_VALIDATION with the runtime
+      validation package (README-PROBES); SPEC_APPROVED not claimed; no Stage 1 work. Runtime validation still
+      required (P-SL-01, P-DB-01, P-ID-01, UI-S1 on the target runtime) plus owner decisions (R-SL-3, R-SL-7, OD-*).
 
 ## Finding ledger (verification → correction → regression → closure)
 
