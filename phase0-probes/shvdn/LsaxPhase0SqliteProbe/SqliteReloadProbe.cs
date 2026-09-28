@@ -1,7 +1,10 @@
 // =====================================================================================
 // DISPOSABLE PHASE 0 FEASIBILITY PROBE — NOT LSAX PRODUCTION CODE. DO NOT SHIP OR REUSE.
-// P-DB-01: can Microsoft.Data.Sqlite + native e_sqlite3 load inside SHVDN's shadow-copied script AppDomain,
-// survive repeated domain reloads (console `Reload`, SP save load), and commit durably within tick budget?
+// P-DB-01 (DRAFT2): can Microsoft.Data.Sqlite + native e_sqlite3 load inside SHVDN's shadow-copied script AppDomain,
+// survive repeated domain reloads (console `Reload`, SP save load), commit durably within tick budget, and run the
+// D-DB-4 architecture (journal file + ATTACHed projection file, journal-then-projection commits, online backup of
+// schema `proj` only, journal backup, snapshot restore into the attached schema)? Writes only its own files under
+// scripts/LSAXProbe/ (p0.db, p0_proj.db, p0_snap.db, p0_journal_backup.db). Never touches game state.
 // Opt-in: scripts/LSAXProbe/probe.ini  SqliteProbe.Enabled=true
 // Optional: SqliteProbe.NativePath=<absolute path to e_sqlite3.dll> (pre-loaded with LoadLibraryW)
 //           SqliteProbe.CloseOnAbort=false  (leak test: do NOT close the connection in Aborted)
@@ -78,6 +81,8 @@ namespace LsaxPhase0SqliteProbe
                 times.Sort();
                 Log("SQL_COMMIT_US", string.Format(CultureInfo.InvariantCulture, "n=20 p50={0} p95={1} max={2} rows={3}",
                     times[10], times[18], times[19], Scalar("SELECT COUNT(*) FROM probe_row;")));
+                LogDependencies();
+                TwoFileArchitecture();
             }
             catch (Exception ex)
             {
@@ -85,6 +90,145 @@ namespace LsaxPhase0SqliteProbe
             }
 
             Aborted += OnAborted;
+        }
+
+        /// <summary>R-COMP-2: where every SQLite-related assembly was resolved from (first EndsWith match wins in SHVDN).</summary>
+        private void LogDependencies()
+        {
+            foreach (System.Reflection.Assembly a in AppDomain.CurrentDomain.GetAssemblies())
+            {
+                string n = a.GetName().Name;
+                if (n.IndexOf("Sqlite", StringComparison.OrdinalIgnoreCase) >= 0 || n.StartsWith("SQLitePCL", StringComparison.Ordinal) ||
+                    n.StartsWith("System.Memory", StringComparison.Ordinal) || n.StartsWith("System.Buffers", StringComparison.Ordinal))
+                {
+                    string loc;
+                    try
+                    {
+                        loc = a.IsDynamic ? "<dynamic>" : a.Location;
+                    }
+                    catch (NotSupportedException)
+                    {
+                        loc = "<n/a>";
+                    }
+
+                    Log("SQL_DEPENDENCY", n + " version=" + a.GetName().Version + " location=" + loc);
+                }
+            }
+        }
+
+        /// <summary>D-DB-4 exercised exactly as specified (LSAX-DB-SCHEMA-DRAFT.md §1, §5).</summary>
+        private void TwoFileArchitecture()
+        {
+            string proj = Path.Combine(_dir, "p0_proj.db");
+            Exec("ATTACH DATABASE '" + proj.Replace("'", "''") + "' AS proj;");
+            Exec("PRAGMA proj.journal_mode=WAL;");
+            Exec("PRAGMA proj.synchronous=NORMAL;");
+            Exec("CREATE TABLE IF NOT EXISTS proj.projection_meta(k TEXT PRIMARY KEY, v TEXT NOT NULL);");
+            Exec("CREATE TABLE IF NOT EXISTS proj.vehicle(id INTEGER PRIMARY KEY, utc TEXT NOT NULL);");
+            Log("SQL_PRAGMAS", string.Format(CultureInfo.InvariantCulture, "main.synchronous={0} proj.synchronous={1} proj.journal={2}",
+                Scalar("PRAGMA main.synchronous;"), Scalar("PRAGMA proj.synchronous;"), Scalar("PRAGMA proj.journal_mode;")));
+
+            // Lag check first: an unclean stop between the two commits leaves the watermark behind the journal.
+            Log("SQL_WATERMARK_AT_START", string.Format(CultureInfo.InvariantCulture, "journalMax={0} watermark={1}",
+                Scalar("SELECT COALESCE(MAX(id),0) FROM main.probe_row;"),
+                Scalar("SELECT COALESCE((SELECT v FROM proj.projection_meta WHERE k='watermark'),'<none>');")));
+
+            var jt = new List<long>();
+            var pt = new List<long>();
+            var sw = new Stopwatch();
+            for (int i = 0; i < 20; i++)
+            {
+                sw.Restart();
+                long id;
+                using (SqliteTransaction tx = _conn.BeginTransaction())
+                using (SqliteCommand c = _conn.CreateCommand())
+                {
+                    c.Transaction = tx;
+                    c.CommandText = "INSERT INTO main.probe_row(utc, pid) VALUES ($u, $p); SELECT last_insert_rowid();";
+                    c.Parameters.AddWithValue("$u", DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture));
+                    c.Parameters.AddWithValue("$p", Process.GetCurrentProcess().Id);
+                    id = (long)c.ExecuteScalar();
+                    tx.Commit();
+                }
+
+                jt.Add(sw.ElapsedTicks * 1000000L / Stopwatch.Frequency);
+                sw.Restart();
+                using (SqliteTransaction tx = _conn.BeginTransaction())
+                using (SqliteCommand c = _conn.CreateCommand())
+                {
+                    c.Transaction = tx;
+                    c.CommandText = "INSERT OR REPLACE INTO proj.vehicle(id, utc) VALUES ($i, $u); " +
+                                    "INSERT OR REPLACE INTO proj.projection_meta(k, v) VALUES ('watermark', $w);";
+                    c.Parameters.AddWithValue("$i", id);
+                    c.Parameters.AddWithValue("$u", DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture));
+                    c.Parameters.AddWithValue("$w", id.ToString(CultureInfo.InvariantCulture));
+                    c.ExecuteNonQuery();
+                    tx.Commit();
+                }
+
+                pt.Add(sw.ElapsedTicks * 1000000L / Stopwatch.Frequency);
+            }
+
+            jt.Sort();
+            pt.Sort();
+            Log("SQL_TWO_FILE_COMMIT_US", string.Format(CultureInfo.InvariantCulture,
+                "n=20 journal(FULL) p50={0} p95={1} max={2} projection(NORMAL) p50={3} p95={4} max={5}",
+                jt[10], jt[18], jt[19], pt[10], pt[18], pt[19]));
+
+            string snap = Path.Combine(_dir, "p0_snap.db");
+            string jb = Path.Combine(_dir, "p0_journal_backup.db");
+            File.Delete(snap);
+            File.Delete(jb);
+            using (var dst = new SqliteConnection("Data Source=" + snap + ";Pooling=False"))
+            {
+                dst.Open();
+                _conn.BackupDatabase(dst, "main", "proj");   // projection snapshot = schema proj only
+                Log("SQL_SNAPSHOT", "tables=[" + Tables(dst) + "] watermark=" + ScalarOn(dst, "SELECT v FROM projection_meta WHERE k='watermark';"));
+            }
+
+            using (var dst = new SqliteConnection("Data Source=" + jb + ";Pooling=False"))
+            {
+                dst.Open();
+                _conn.BackupDatabase(dst, "main", "main");   // journal backup = schema main
+                Log("SQL_JOURNAL_BACKUP", "tables=[" + Tables(dst) + "]");
+            }
+
+            Exec("DELETE FROM proj.vehicle; DELETE FROM proj.projection_meta;");
+            using (var src = new SqliteConnection("Data Source=" + snap + ";Pooling=False"))
+            {
+                src.Open();
+                src.BackupDatabase(_conn, "proj", "main");   // restore snapshot into the attached schema
+            }
+
+            Log("SQL_RESTORE", string.Format(CultureInfo.InvariantCulture, "projRows={0} watermark={1}",
+                Scalar("SELECT COUNT(*) FROM proj.vehicle;"), Scalar("SELECT v FROM proj.projection_meta WHERE k='watermark';")));
+        }
+
+        private static string Tables(SqliteConnection c)
+        {
+            var names = new List<string>();
+            using (SqliteCommand cmd = c.CreateCommand())
+            {
+                cmd.CommandText = "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name;";
+                using (SqliteDataReader r = cmd.ExecuteReader())
+                {
+                    while (r.Read())
+                    {
+                        names.Add(r.GetString(0));
+                    }
+                }
+            }
+
+            return string.Join(",", names);
+        }
+
+        private static string ScalarOn(SqliteConnection c, string sql)
+        {
+            using (SqliteCommand cmd = c.CreateCommand())
+            {
+                cmd.CommandText = sql;
+                return Convert.ToString(cmd.ExecuteScalar(), CultureInfo.InvariantCulture);
+            }
         }
 
         private void OnAborted(object sender, EventArgs e)

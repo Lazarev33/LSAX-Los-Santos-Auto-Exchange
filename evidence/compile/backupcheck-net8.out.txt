@@ -1,0 +1,4 @@
+SNAPSHOT tables=[projection_meta,vehicle] watermark=20
+JOURNAL_BACKUP tables=[probe_row]
+RESTORE projRows=20 watermark=20 sqlite=3.41.2 main.sync=2 proj.sync=1
+RESULT: PASS

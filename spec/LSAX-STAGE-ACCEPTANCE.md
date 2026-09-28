@@ -30,7 +30,7 @@ SPEC_APPROVED; only a later independent reviewer may.
 | SQLite layer, schema v1, migrations framework, journal + projection DB + projection backup | T-DB-1..5 green; P-DB-01 PASS on target PC (already required for SPEC_APPROVED) |
 | Transaction-core skeleton (no market) incl. system transactions | T-TX-1..3 green; P0-02 and P1-04 regressions ported and green |
 | Save/load anchoring: session token, save ledger, hypothesis exclusion, RECONCILE gate + resolution stub | T-SL-1 (random model, 0 safety failures, full path coverage), T-SL-2 (P0-03 regression cases) green |
-| Runtime save/load | P-SL-01 T1–T14 re-run with LSAX Stage 1: every step's outcome equals the predicted outcome table in README-PROBES (anchor / refuse with the listed reason); 0 false anchors; correct anchor in 10/10 loads of each LSAX-observed slot kind |
+| Runtime save/load | P-SL-01 T1–T17 re-run with LSAX Stage 1: every step's outcome equals the predicted outcome table in README-PROBES (anchor / refuse with the listed reason); 0 false anchors; correct anchor in 10/10 loads of each LSAX-observed slot kind |
 | Crash recovery | T-TX-4 matrix 100 %; runtime: 10 forced script aborts at each of C1/CA/CB/C2 → outcome as TSM §10 predicts, 10/10 |
 | Identity runtime | T-RT-ID-1: 0 wrong binds in 80 events; ambiguous cases refused |
 | Logging | `LSAX.log` format per compatibility §3; rotation test |

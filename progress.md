@@ -207,12 +207,16 @@ the audited branch `claude/focused-thompson-ilnspm`, DRAFT1 files, PR #1 or `mai
       Audit-grade run: ALL PASS, total 192.8 s (journal model 159.5 s: 800 episodes, 4 522 crashes, 0 safety
       failures, full coverage; realistic RECONCILE 17.1-18.3 %). feasibility.md E9-1..E9-12 added; SAVELOAD §5,
       RISK-REGISTER/risks R-SL-3/R-SL-5 updated to audit-grade numbers.
-- [ ] C0-15 Review/prepare P-SL-01 and P-DB-01
-      (in progress) Self-found while mapping the probe to the assumptions (recorded in the ledger below):
-      SF-4 asynchronous save write lets a transaction land between snapshot and file -> wrong ledger head
-      (model: 31 I0 violations / 30 episodes) -> D-SL-18 save-in-progress gate; SF-5 bracket started at the poll
-      before the file change could exclude the true file -> D-SL-17 amended (pre-signal bracket). Model gained
-      SAVE_ASYNC; regress_p0_03 now 26 cases / 84 checks PASS; A-SL-12 strengthened; PC-4/PC-8 criteria updated.
+- [x] C0-15 Review/prepare P-SL-01 and P-DB-01
+      Self-found SF-4/SF-5 (async save write) fixed first: D-SL-18 gate, D-SL-17 pre-signal bracket; model gained
+      SAVE_ASYNC; regress_p0_03 26 cases / 84 checks. P-SL-01 rewritten (per-tick samples, pre-signal brackets, probe
+      ledger + LOAD_MATCH, session-token decorator + re-tag, TICK_INTERLEAVE markers, WALLET_CHANGE, PT_DECREASED,
+      process key); P-DB-01 extended with D-DB-4 (ATTACH proj, two-file commits, BackupDatabase snapshot/journal backup/
+      restore, pragmas, dependency locations); P-ID-01 logs owning script; shared ProbeDecor helper. Clean builds:
+      0 warnings / 0 errors (evidence/compile). D-DB-4 calls executed on .NET 8/Linux (dotnet-checks/backupcheck: PASS).
+      README-PROBES rewritten as the runtime validation package: target runtime, backup, build, exact install paths,
+      launch, T1-T17 with expected log rows, PASS/FAIL rules PC-1..PC-8, P-DB-01/P-ID-01/P-SL-02 procedures, evidence
+      collection, cleanup. probe.ini.sample: SessionToken.Enabled. feasibility E9-13/E9-14.
 - [ ] C0-16 Full xref/static/spec self-audit
 - [ ] C0-17 Rebuild DRAFT2 package and hashes
 - [ ] C0-18 Push correction branch

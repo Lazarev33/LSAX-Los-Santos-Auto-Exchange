@@ -1,0 +1,4 @@
+  LsaxPhase0SqliteProbe -> <repo>/phase0-probes/shvdn/LsaxPhase0SqliteProbe/bin/Release/net48/LsaxPhase0SqliteProbe.dll
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)

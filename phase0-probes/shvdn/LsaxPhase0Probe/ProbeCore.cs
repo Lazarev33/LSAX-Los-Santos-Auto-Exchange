@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Reflection;
 using System.Text;
 using GTA;
 using GTA.Native;
@@ -85,9 +86,7 @@ namespace LsaxPhase0Probe
         /// <summary>Counts how many times a probe domain was constructed inside this OS process.</summary>
         public static int IncrementDomainCounter()
         {
-            Process p = Process.GetCurrentProcess();
-            string key = p.Id.ToString(CultureInfo.InvariantCulture) + "-" + p.StartTime.ToUniversalTime().Ticks.ToString(CultureInfo.InvariantCulture);
-            string path = Path.Combine(Dir, "domains-" + key + ".count");
+            string path = Path.Combine(Dir, "domains-" + ProcessKey() + ".count");
             int n = 0;
             if (File.Exists(path))
             {
@@ -97,6 +96,13 @@ namespace LsaxPhase0Probe
             n++;
             File.WriteAllText(path, n.ToString(CultureInfo.InvariantCulture));
             return n;
+        }
+
+        /// <summary>Process identity (S16): OS process id + start time; distinguishes a game restart from a reload.</summary>
+        public static string ProcessKey()
+        {
+            Process p = Process.GetCurrentProcess();
+            return p.Id.ToString(CultureInfo.InvariantCulture) + "-" + p.StartTime.ToUniversalTime().Ticks.ToString(CultureInfo.InvariantCulture);
         }
 
         private static Dictionary<string, string> ReadIni(string path)
@@ -172,6 +178,47 @@ namespace LsaxPhase0Probe
         public static string B(bool b)
         {
             return b ? "1" : "0";
+        }
+    }
+
+    /// <summary>Decorator registration shared by P-SL-01 (session token) and P-ID-01 (vehicle tag).</summary>
+    internal static class ProbeDecor
+    {
+        public const int TypeInt = 3; // eDecorType.DECOR_TYPE_INT (native DB comment on DECOR_REGISTER)
+
+        /// <summary>Registers an int decorator, unlocking via SHVDN 3.7 DecoratorInterface.IsLocked if present.</summary>
+        public static bool EnsureRegistered(string name, string logPrefix)
+        {
+            if (Function.Call<bool>(Hash.DECOR_IS_REGISTERED_AS_TYPE, name, TypeInt))
+            {
+                return true;
+            }
+
+            // DecoratorInterface exists only in SHVDN 3.7 nightlies (feasibility.md E3-1); reflection keeps this
+            // probe compiling against 3.6.0 while still exercising the 3.7 unlock path when available.
+            Type di = typeof(Script).Assembly.GetType("GTA.DecoratorInterface", false);
+            PropertyInfo locked = di != null ? di.GetProperty("IsLocked", BindingFlags.Public | BindingFlags.Static) : null;
+            ProbeEnv.Log(logPrefix + "_DECOR_UNLOCK_API", locked != null ? "present" : "absent");
+            try
+            {
+                if (locked != null)
+                {
+                    locked.SetValue(null, false);
+                }
+
+                Function.Call(Hash.DECOR_REGISTER, name, TypeInt);
+            }
+            finally
+            {
+                if (locked != null)
+                {
+                    locked.SetValue(null, true);
+                }
+            }
+
+            bool ok = Function.Call<bool>(Hash.DECOR_IS_REGISTERED_AS_TYPE, name, TypeInt);
+            ProbeEnv.Log(logPrefix + "_DECOR_REGISTER", "name=" + name + " ok=" + Nat.B(ok));
+            return ok;
         }
     }
 

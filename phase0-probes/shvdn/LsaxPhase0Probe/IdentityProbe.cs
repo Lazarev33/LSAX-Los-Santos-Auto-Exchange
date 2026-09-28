@@ -8,7 +8,6 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Reflection;
 using System.Windows.Forms;
 using GTA;
 using GTA.Native;
@@ -18,7 +17,7 @@ namespace LsaxPhase0Probe
     public sealed class IdentityProbe : Script
     {
         private const string Decor = "lsax_p0_tag";
-        private const int DecorTypeInt = 3; // eDecorType.DECOR_TYPE_INT (native DB comment on DECOR_REGISTER)
+        private const int DecorTypeInt = ProbeDecor.TypeInt;
         private const float ScanRadius = 120f;
         private const int MaxScan = 64;
 
@@ -148,39 +147,9 @@ namespace LsaxPhase0Probe
             }
         }
 
-        /// <summary>Registers the probe decorator, unlocking via SHVDN 3.7 DecoratorInterface.IsLocked if present.</summary>
         private static bool EnsureRegistered()
         {
-            if (Function.Call<bool>(Hash.DECOR_IS_REGISTERED_AS_TYPE, Decor, DecorTypeInt))
-            {
-                return true;
-            }
-
-            // DecoratorInterface exists only in SHVDN 3.7 nightlies (feasibility.md E3-1); use reflection so this
-            // probe compiles against 3.6.0 and still exercises the 3.7 unlock path when available.
-            Type di = typeof(Script).Assembly.GetType("GTA.DecoratorInterface", false);
-            PropertyInfo locked = di != null ? di.GetProperty("IsLocked", BindingFlags.Public | BindingFlags.Static) : null;
-            ProbeEnv.Log("IDENTITY_DECOR_UNLOCK_API", locked != null ? "present" : "absent");
-            try
-            {
-                if (locked != null)
-                {
-                    locked.SetValue(null, false);
-                }
-
-                Function.Call(Hash.DECOR_REGISTER, Decor, DecorTypeInt);
-            }
-            finally
-            {
-                if (locked != null)
-                {
-                    locked.SetValue(null, true);
-                }
-            }
-
-            bool ok = Function.Call<bool>(Hash.DECOR_IS_REGISTERED_AS_TYPE, Decor, DecorTypeInt);
-            ProbeEnv.Log("IDENTITY_DECOR_REGISTER", "ok=" + Nat.B(ok));
-            return ok;
+            return ProbeDecor.EnsureRegistered(Decor, "IDENTITY");
         }
 
         private static VehDesc Describe(Vehicle v)
@@ -196,14 +165,17 @@ namespace LsaxPhase0Probe
             int model = v.Model.Hash;
             bool mission = Function.Call<bool>(Hash.IS_ENTITY_A_MISSION_ENTITY, v);
             int pop = Function.Call<int>(Hash.GET_ENTITY_POPULATION_TYPE, v);
+            // Owning script name (GET_ENTITY_SCRIPT, native DB ENTITY 0xA6E9C38DB51D7748): research input for a
+            // LEGACY_TRUSTED ownership marker (D-PROV-1, OD-4). Logged only; no rule is derived in Phase 0.
+            string owner = Function.Call<string>((Hash)0xA6E9C38DB51D7748UL, v, 0) ?? "<null>";
             string text = string.Format(CultureInfo.InvariantCulture,
-                "handle={0} model=0x{1:X8} plate='{2}' plateIdx={3} col={4}/{5} pearl={6} wheelCol={7} livery={8} tint={9} wheelType={10} modKit={11} mission={12} pop={13} body={14:F0} engine={15:F0} tank={16:F0} dirt={17:F1}",
+                "handle={0} model=0x{1:X8} plate='{2}' plateIdx={3} col={4}/{5} pearl={6} wheelCol={7} livery={8} tint={9} wheelType={10} modKit={11} mission={12} pop={13} body={14:F0} engine={15:F0} tank={16:F0} dirt={17:F1} script={18}",
                 v.Handle, model, plate, plateIdx, c1.GetResult<int>(), c2.GetResult<int>(), pearl.GetResult<int>(), wheel.GetResult<int>(),
                 Function.Call<int>(Hash.GET_VEHICLE_LIVERY, v), Function.Call<int>(Hash.GET_VEHICLE_WINDOW_TINT, v),
                 Function.Call<int>(Hash.GET_VEHICLE_WHEEL_TYPE, v), Function.Call<int>(Hash.GET_VEHICLE_MOD_KIT, v),
                 Nat.B(mission), pop, Function.Call<float>(Hash.GET_VEHICLE_BODY_HEALTH, v),
                 Function.Call<float>(Hash.GET_VEHICLE_ENGINE_HEALTH, v), Function.Call<float>(Hash.GET_VEHICLE_PETROL_TANK_HEALTH, v),
-                Function.Call<float>(Hash.GET_VEHICLE_DIRT_LEVEL, v));
+                Function.Call<float>(Hash.GET_VEHICLE_DIRT_LEVEL, v), owner);
             return new VehDesc { Key = (plate ?? string.Empty).Trim() + "|" + model.ToString("X8", CultureInfo.InvariantCulture), Text = text };
         }
 
