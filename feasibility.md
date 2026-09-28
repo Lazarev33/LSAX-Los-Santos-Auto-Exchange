@@ -71,6 +71,12 @@ Full output: `evidence/native_check.txt`, `evidence/save_natives_scan.txt`.
 | E5-2 | `Game.IsPaused` = `IS_PAUSE_MENU_ACTIVE`. | VERIFIED (source) | `GTA/Game.cs` L326 |
 | E5-3 | `World.GetAllVehicles`, `World.GetNearbyVehicles(pos, r)`, `World.VehicleCount`, `World.VehicleCapacity` exist (memory-pool based). | VERIFIED (source) | `GTA/World.cs` L366–572 |
 | E5-4 | `GTA.Chrono.GameClock` (3.7 API): `Now`, `IsPaused`, `LastTimeMinAdded`, `MillisecondsPerGameMinute`, `AddToCurrentTime`. | VERIFIED (source) | `GTA.Chrono/GameClock.cs` |
+| E5-5 | `EntityPopulationType` enum: Unknown, RandomPermanent, RandomParked, RandomPatrol, RandomScenario, RandomAmbient, Permanent, Mission, Replay, Cache, Tool (used for theft classification and exclusions). | VERIFIED (source) | `GTA/Entities/EntityPopulationType.cs` |
+| E5-6 | `VehicleClass` enum names incl. Emergency, Military, Service, Commercial, Trains, Boats, Helicopters, Planes, Cycles, OpenWheel. | VERIFIED (source) | `GTA/Entities/Vehicles/VehicleClass.cs` |
+| E5-7 | `Game.MeasurementSystem` = `SHOULD_USE_METRIC_MEASUREMENTS`; `Game.Language` = `GET_CURRENT_LANGUAGE`. | VERIFIED (source) | `GTA/Game.cs` L125, L136 |
+| E5-8 | `GTA.UI.TextElement` and `GTA.UI.ContainerElement` exist in the ScriptHookVDotNet3 **3.6.0** assembly (TypeDef table) and in 3.7 source → zero-dependency debug renderer possible. | VERIFIED (compile surface) | dnfile TypeDef listing of 3.6.0 DLL |
+| E5-9 | Month from `GET_CLOCK_MONTH` is 0-based (`GameClock.Month0`). `GET_MISSION_FLAG` exists. | VERIFIED (source / DB) | `GameClock.cs`; native DB |
+| E5-10 | Additional natives used by the spec verified to exist (DB + Hash enum): `IS_MODEL_IN_CDIMAGE`, `IS_ENTITY_DEAD`, `GET_PLAYER_WANTED_LEVEL`, `GET_PED_IN_VEHICLE_SEAT`, `GET_LAST_PED_IN_VEHICLE_SEAT`, `IS_PED_JACKING`, `IS_ENTITY_ATTACHED`, `REQUEST_MODEL`, `HAS_MODEL_LOADED`, `SET_ENTITY_AS_NO_LONGER_NEEDED`, `DELETE_VEHICLE`; and all 33 names on the forbidden-native list. | VERIFIED (existence) | `evidence/native_check.txt`, `evidence/forbidden_natives_check.txt` |
 
 ## E6 — Script assembly loading / dependencies (SQLite relevant)
 

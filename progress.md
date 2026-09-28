@@ -29,19 +29,14 @@ feasibility.md and continue from the first item not marked [x]. Do not restart P
         SellVehicles v1.2 110362ea5213400d23567ad595256748e4e33e2e8f154da4b61295f03ce61322
         SellCars d6dca5cef76a0c39ee81a4974abe320881610e37c7c576ce2f74d5a243206a10
 - [x] P0-02 Derive full deliverable list from 05-CLAUDE-OPUS-PHASE0-PROMPT.txt
-      Deliverables (all inside LSAX-MASTER-SPEC-v1.0-DRAFT1.zip):
-      [ ] LSAX-MASTER-SPEC-v1.0.md (sections 00..30 + appendices per 03-*.md)
-      [ ] LSAX-DOMAIN-MODEL.md          [ ] LSAX-SAVELOAD-FEASIBILITY.md
-      [ ] LSAX-TIME-MODEL.md            [ ] LSAX-DB-SCHEMA-DRAFT.md
-      [x] LSAX-VALUATION-MODEL.md       [x] LSAX-NPC-GENERATION-MODEL.md
-      [x] LSAX-HEAT-AND-UNDERGROUND-MODEL.md
-      [ ] LSAX-TRANSACTION-STATE-MACHINE.md
-      [x] LSAX-COMPATIBILITY-CONTRACT.md [x] LSAX-PERFORMANCE-BUDGET.md
-      [x] LSAX-LOCALIZATION-CONTRACT.md [x] LSAX-TEST-STRATEGY.md
-      [ ] LSAX-STAGE-ACCEPTANCE.md      [ ] LSAX-RISK-REGISTER.md
-      [ ] LSAX-REFERENCE-REVIEW.md
-      [ ] progress.md decisions.md risks.md feasibility.md
-      [ ] SHA-256 manifest
+      Deliverables (all inside LSAX-MASTER-SPEC-v1.0-DRAFT1.zip) — inventory only; the single
+      authoritative STATUS list is under P0-06 / P0-08 below:
+      LSAX-MASTER-SPEC-v1.0.md (sections 00..30 + appendices per 03-*.md), LSAX-DOMAIN-MODEL.md,
+      LSAX-SAVELOAD-FEASIBILITY.md, LSAX-TIME-MODEL.md, LSAX-DB-SCHEMA-DRAFT.md, LSAX-VALUATION-MODEL.md,
+      LSAX-NPC-GENERATION-MODEL.md, LSAX-HEAT-AND-UNDERGROUND-MODEL.md, LSAX-TRANSACTION-STATE-MACHINE.md,
+      LSAX-COMPATIBILITY-CONTRACT.md, LSAX-PERFORMANCE-BUDGET.md, LSAX-LOCALIZATION-CONTRACT.md,
+      LSAX-TEST-STRATEGY.md, LSAX-STAGE-ACCEPTANCE.md, LSAX-RISK-REGISTER.md, LSAX-REFERENCE-REVIEW.md,
+      progress.md, decisions.md, risks.md, feasibility.md, SHA-256 manifest.
       Appendices required: domain/state diagrams, DB schema draft, valuation formula + >=8 vectors,
       Heat examples, mileage/generation examples, identity collision matrix, save/load decision
       record, transaction interruption/recovery matrix, localization key examples, perf budget
@@ -77,13 +72,13 @@ feasibility.md and continue from the first item not marked [x]. Do not restart P
           [x] run_all.py -> evidence/sim/*.out.md + SUMMARY.md (all PASS, ~2m15s)
       [x] F-e Record results in feasibility.md (E8); decisions.md D-SL-*/D-TX-*/D-VAL/D-GEN/D-HEAT
 - [x] P0-05 (closed; runtime proof pending = BLOCKER B-01, owner must run phase0-probes on target PC)
-- [ ] P0-06 Spec documents (spec/)
+- [x] P0-06 Spec documents (spec/) — all 16 drafted
       [x] LSAX-REFERENCE-REVIEW.md  [x] LSAX-SAVELOAD-FEASIBILITY.md  [x] LSAX-TIME-MODEL.md
       [x] LSAX-DOMAIN-MODEL.md      [x] LSAX-TRANSACTION-STATE-MACHINE.md  [x] LSAX-DB-SCHEMA-DRAFT.md
       [x] LSAX-VALUATION-MODEL.md   [x] LSAX-NPC-GENERATION-MODEL.md  [x] LSAX-HEAT-AND-UNDERGROUND-MODEL.md
       [x] LSAX-LOCALIZATION-CONTRACT.md  [x] LSAX-COMPATIBILITY-CONTRACT.md  [x] LSAX-PERFORMANCE-BUDGET.md
-      [x] LSAX-TEST-STRATEGY.md     [ ] LSAX-STAGE-ACCEPTANCE.md  [ ] LSAX-RISK-REGISTER.md
-      [ ] LSAX-MASTER-SPEC-v1.0.md (sections 00-30 + appendices, SPEC_APPROVED checklist)
+      [x] LSAX-TEST-STRATEGY.md     [x] LSAX-STAGE-ACCEPTANCE.md  [x] LSAX-RISK-REGISTER.md
+      [x] LSAX-MASTER-SPEC-v1.0.md (sections 00-30 + appendices, SPEC_APPROVED checklist)
 - [ ] P0-07 Self-audit / consistency pass
 - [ ] P0-08 SHA-256 manifest + LSAX-MASTER-SPEC-v1.0-DRAFT1.zip
 - [ ] P0-09 Commit + push to claude/focused-thompson-ilnspm
