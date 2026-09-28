@@ -50,7 +50,7 @@ Stage gates additionally require the listed L3 runs (LSAX-STAGE-ACCEPTANCE.md).
 |---|---|---|---|
 | T-SL-1 | save/load model | C# port of `journal_timeline_ref.py`: 800 episodes, both mixes, G = 1 ms and 1 000 ms | 0 safety-invariant failures; tripwire as in the reference |
 | T-SL-2 | anchoring | table cases: continuation, in-session load of each slot kind, ghost slot with pending txn, NO_MATCH new game, AMBIGUOUS coincidences | expected verdict per case |
-| T-TX-4 | recovery | crash injection at C0–C3 × {script reload, game crash + load, offline window} (TSM §10 matrix) | matrix outcomes, 100 % |
+| T-TX-4 | recovery | crash injection at C0/C1/CA/CB/C2/C3 × {clean reload, unclean same session, downtime with other-mod cash writes, token lost, game crash + load} × external cash ∈ {none, = wallet_before, = wallet_after} (TSM §10 matrix) | matrix 100 %; verdict never depends on wallet values; roll-forward only on own APPLIED + session token |
 | T-TX-5 | concurrency | fake Crime-Jobs cash write between PREPARE and apply | ABORTED_CONCURRENT_CASH |
 | T-DB-1 | schema | create from scratch; all CHECK constraints reject out-of-range values | 100 % |
 | T-DB-2 | migrations | each migration from its fixture DB; golden projection dump equality; pre-migration backup exists | 100 % |

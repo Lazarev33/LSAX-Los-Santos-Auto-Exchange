@@ -115,6 +115,30 @@ def fnv1a64(text: str) -> int:
     return h
 
 
+def mix64(x: int) -> int:
+    """SplitMix64 finaliser: a bijection on 64-bit integers (xor-shifts and odd multipliers are invertible)."""
+    z = x & MASK64
+    z = ((z ^ (z >> 30)) * 0xBF58476D1CE4E5B9) & MASK64
+    z = ((z ^ (z >> 27)) * 0x94D049BB133111EB) & MASK64
+    return z ^ (z >> 31)
+
+
+def _unxorshift(z: int, k: int) -> int:
+    x = z
+    for _ in range(64 // k + 1):
+        x = z ^ (x >> k)
+    return x & MASK64
+
+
+def unmix64(z: int) -> int:
+    """Inverse of mix64 (proves bijectivity; used only by tests)."""
+    x = _unxorshift(z & MASK64, 31)
+    x = (x * pow(0x94D049BB133111EB, -1, 1 << 64)) & MASK64
+    x = _unxorshift(x, 27)
+    x = (x * pow(0xBF58476D1CE4E5B9, -1, 1 << 64)) & MASK64
+    return _unxorshift(x, 30)
+
+
 def derive_seed(*parts) -> int:
     """Seed = FNV-1a64 of the '|'-joined decimal/str parts. Parts must be ints or ASCII identifiers."""
     return fnv1a64("|".join(str(p) for p in parts))

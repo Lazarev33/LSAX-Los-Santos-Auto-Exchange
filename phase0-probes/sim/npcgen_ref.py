@@ -10,7 +10,7 @@ import json
 import sys
 from collections import defaultdict
 
-from lsax_ref_math import BP, SplitMix64, clamp, derive_seed, interp, mul_bp, rdiv
+from lsax_ref_math import BP, MASK64, SplitMix64, clamp, derive_seed, interp, mix64, mul_bp, rdiv, unmix64
 
 ARCH = ["LOW_USE", "COMMUTER", "FLEET", "NEGLECTED", "ENTHUSIAST"]
 AGE_Q = {  # quantile tables: p_bp -> age months
@@ -133,8 +133,48 @@ def fallback(seg, rng):
                 service=(700 if due else None), accidents=[], title="CLEAN_TITLE", owners=min(1 + age // 60, 2 + age // 36), fallback=True)
 
 
-def generate(timeline_seed, market_day, seg, slot):
-    rng = SplitMix64(derive_seed("npcgen", timeline_seed, market_day, seg, slot))
+# ---------------------------------------------------------------- generation identity (DRAFT2, D-GEN-6, audit P1-05)
+STEP_BITS, SEG_BITS, ORD_BITS = 40, 4, 20            # 40 + 4 + 20 = 64
+SEGMENT_CODE = {seg: code for code, seg in enumerate(AGE_Q)}  # stable order of the segment tables (<= 16 segments)
+assert len(SEGMENT_CODE) <= (1 << SEG_BITS)
+GENERATED_NS = 1 << 63                               # top bit of high64: generated namespace (registered ids clear it)
+
+
+def pack_identity(step_index, seg, ordinal):
+    """Injective packing of the generation identity (market_step_index, segment, generation_ordinal).
+    Out-of-range components are refused (never wrapped)."""
+    code = SEGMENT_CODE[seg]
+    if not (0 <= step_index < (1 << STEP_BITS) and 0 <= ordinal < (1 << ORD_BITS) and 0 <= code < (1 << SEG_BITS)):
+        raise ValueError("generation identity out of range")
+    return (step_index << (SEG_BITS + ORD_BITS)) | (code << ORD_BITS) | ordinal
+
+
+def unpack_identity(v):
+    code = (v >> ORD_BITS) & ((1 << SEG_BITS) - 1)
+    seg = next(k for k, c in SEGMENT_CODE.items() if c == code)
+    return v >> (SEG_BITS + ORD_BITS), seg, v & ((1 << ORD_BITS) - 1)
+
+
+def vehicle_id(campaign_salt, step_index, seg, ordinal):
+    """128-bit VehicleId = high64 (campaign salt, generated namespace bit set) | low64 = mix64(packed identity).
+    Injective within a campaign by construction (packing injective, mix64 bijective)."""
+    high = (campaign_salt | GENERATED_NS) & MASK64
+    return (high << 64) | mix64(pack_identity(step_index, seg, ordinal))
+
+
+def identity_of(vid):
+    return unpack_identity(unmix64(vid & MASK64))
+
+
+def draft1_vehicle_id(campaign_seed, market_day, seg, slot):
+    """DRAFT1 DOMAIN §4.1: derive_seed("vehicle", campaign_seed, market_day, segment, slot) (audit P1-05 defect)."""
+    return derive_seed("vehicle", campaign_seed, market_day, seg, slot)
+
+
+def generate(campaign_seed, market_step_index, seg, generation_ordinal):
+    """Vehicle attributes for generation identity (campaign_seed, market_step_index, segment, generation_ordinal).
+    Deterministic: the same identity always yields the same vehicle (re-roll protection)."""
+    rng = SplitMix64(derive_seed("npcgen", campaign_seed, market_step_index, seg, generation_ordinal))
     for attempt in range(MAX_RETRIES):
         v = generate_once(rng, seg)
         if not violations(v):
@@ -202,21 +242,21 @@ def main():
     if d1 != d2:
         fails.append("determinism digest mismatch")
 
-    print("### Distribution summary (N=20,000 per segment, timeline_seed=1234567, market_day=42)\n")
+    print("### Distribution summary (N=20,000 per segment, campaign_seed=1234567, market_step_index=42)\n")
     print("| Segment | Violations | Fallbacks | Spearman(age,odo) | Archetype counts | Median annual km by archetype | Mean M by archetype | Mean accidents | Mean owners | Salvage |")
     print("|---|---:|---:|---:|---|---|---|---:|---:|---:|")
     for seg, s in stats.items():
         print(f"| {seg} | {s['violations']} | {s['fallbacks']} | {s['spearman_age_odo']} | {s['archetype_share']} | "
               f"{s['median_annual_km']} | {s['mean_mech']} | {s['mean_accidents']} | {s['mean_owners']} | {s['salvage_share']} |")
-    print("\n### Example generated vehicles (seed 1234567, day 42, MAINSTREAM slots 0..5, SPORTS 0..1, COMMERCIAL 0..1, CLASSIC 0)\n")
-    print("| Slot | Seg | Age mo | Archetype | Odo km | km/yr | M | B | Service | Accidents (sev, repaired) | Title | Owners | Attempts |")
+    print("\n### Example generated vehicles (campaign seed 1234567, market step 42, MAINSTREAM ordinals 0..5, SPORTS 0..1, COMMERCIAL 0..1, CLASSIC 0)\n")
+    print("| Ordinal | Seg | Age mo | Archetype | Odo km | km/yr | M | B | Service | Accidents (sev, repaired) | Title | Owners | Attempts |")
     print("|---|---|---:|---|---:|---:|---:|---:|---:|---|---|---:|---:|")
     for seg, slots in (("MAINSTREAM", range(6)), ("SPORTS", range(2)), ("COMMERCIAL", range(2)), ("CLASSIC", range(1))):
         for i in slots:
             v = generate(1234567, 42, seg, i)
             print(f"| {i} | {seg} | {v['age_months']} | {v['archetype']} | {v['odo_km']:,} | {rdiv(v['odo_km']*12, max(v['age_months'],1)):,} | "
                   f"{v['mech']} | {v['body']} | {v['service'] if v['service'] is not None else 'n/due'} | {v['accidents'] or '—'} | {v['title']} | {v['owners']} | {v['attempts']} |")
-    print(f"\nDeterminism digest (seed 7, day 3, MAINSTREAM 0..999): `{d1}`")
+    print(f"\nDeterminism digest (campaign seed 7, market step 3, MAINSTREAM ordinals 0..999): `{d1}`")
     print("RESULT:", "PASS" if not fails else "FAIL")
     for f in fails:
         print("  -", f)

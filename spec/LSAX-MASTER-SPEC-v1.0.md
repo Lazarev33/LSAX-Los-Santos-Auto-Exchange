@@ -60,7 +60,7 @@ normative for their domains.
 | Ghost timeline | Branch holding saves written while LSAX was not running (D-SL-10) |
 | Idempotency key | Deterministic key of a user/system intent; commits at most once on the active path |
 | Journal | Authoritative append-only record of commits and events; projection is derived |
-| Ledger (save-slot) | LSAX's record of each GTA save file's current content fingerprint (D-SL-3) |
+| Save ledger | LSAX's positive knowledge of save-file CONTENT (SHA-256) it observed being written or found at first run; slot state classifies current files TRUSTED / PRE_INSTALL / UNTRUSTED (SAVELOAD §4.1, D-SL-13) |
 | LsaxVin | 17-character display code derived from VehicleId |
 | PREPARED | Durable pre-apply transaction state; resolved only by evidence |
 | Projection | Rebuildable current state of the active timeline path |
@@ -167,7 +167,8 @@ Hybrid, integer, bounded: structural multiplicative (age, mileage, condition) + 
 
 ## 10 NPC Vehicle Generation → `LSAX-NPC-GENERATION-MODEL.md`
 
-Correlated causal chain, constraints C1–C9, deterministic seeds keyed to MT day (reload cannot re-roll).
+Correlated causal chain, constraints C1–C9, deterministic seeds and injective VehicleIds keyed to the generation
+identity (campaign, market step index, segment, ordinal) — reload cannot re-roll, steps never collide (D-GEN-6).
 
 ## 11 Demand / Supply / Rarity / Liquidity (normative here)
 
@@ -310,7 +311,7 @@ Lively World, Unified Shadow Logger, Crime Jobs, LSAX; entity-conflict rules; fo
 | AX-6 | trainer mutation | odometer/wear LSAX-owned; native repair doesn't reset wear; mutations while Dormant lower identity confidence (refusal) |
 | AX-7 | sold-vehicle respawn | `GAME_RESPAWN_OF_SOLD` → not registrable/sellable |
 | AX-8 | destroyed-vehicle sale | lifecycle DESTROYED/RETIRED not listable/sellable; listings INVALIDATED |
-| AX-9 | re-roll by reload | seeds keyed to campaign + MT day/listing version |
+| AX-9 | re-roll by reload | seeds keyed to campaign + market step index + segment + ordinal / listing version |
 | AX-10 | market farming / arbitrage | negative round trip (fees + spreads); underground caps + velocity + Heat |
 | AX-11 | stale listing / accepted offer | versions + state hash + MT expiry checked at PREPARE (TX-I6) |
 | AX-12 | wallet ambiguity (non-protagonist model) | money operations refused (D-ECO-2) |

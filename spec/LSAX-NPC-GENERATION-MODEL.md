@@ -1,6 +1,6 @@
 # LSAX — Correlated NPC Vehicle Generation Model
 
-Document: LSAX-NPC-GENERATION-MODEL.md · Spec: LSAX MASTER SPEC v1.0 DRAFT1 · Status: DRAFT for independent audit
+Document: LSAX-NPC-GENERATION-MODEL.md · Spec: LSAX MASTER SPEC v1.0 DRAFT2 · Status: DRAFT for independent re-audit
 
 Normative reference implementation: `phase0-probes/sim/npcgen_ref.py`. Structure, causal order, constraints,
 determinism and acceptance tests are normative; distribution tables are **INITIAL / TUNABLE**.
@@ -14,12 +14,26 @@ mileage, condition, service, accidents and owners tell one plausible story.
 
 - PRNG: SplitMix64 (`lsax_ref_math.py`), integer sampling by rejection, inverse-CDF sampling from integer quantile
   tables. No floating point in generation.
-- Seed per generated vehicle: `derive_seed("npcgen", campaign_seed, market_day, segment, slot)` (FNV-1a 64 over
-  the `|`-joined parts). `market_day = MT_day` of the market step that creates the listing.
-- Consequence: after a save/load rewind to an earlier MT day, the market step regenerates **the same** vehicles —
+- **Generation identity (DRAFT2, D-GEN-6, audit P1-05):** every generated vehicle is identified by
+  `(campaign, market_step_index, segment, generation_ordinal)`. `market_step_index = ⌊MT / 60⌋` of the
+  `SYS_MARKET_STEP` that creates it (24 steps per MT day); a timeline path executes each step index at most once
+  (its idempotency key, TRANSACTION-STATE-MACHINE §3a). `generation_ordinal` counts 0, 1, 2 … within
+  (step, segment) in generation order (initial stock and replenishment alike) and is never reused; sold, expired or
+  withdrawn listings never free an identity.
+- Seed per generated vehicle: `derive_seed("npcgen", campaign_seed, market_step_index, segment, generation_ordinal)`
+  (FNV-1a 64 over the `|`-joined parts, then SplitMix64, whose output function mixes the seed).
+- **VehicleId** (128-bit): high 64 = campaign salt with the generated-namespace bit (bit 127) set; low 64 =
+  `mix64(step << 24 | segment_code << 20 | ordinal)` — step < 2^40, segment code < 16, ordinal < 2^20, out-of-range
+  refused. Packing is injective and `mix64` (SplitMix64 finaliser) is a bijection, so **distinct generation
+  identities can never share a VehicleId** — uniqueness by construction, not by probability. Player-registered
+  vehicles use random ids with bit 127 clear (disjoint namespace).
+- Consequence: after a save/load rewind to an earlier step, the market step regenerates **the same** vehicles —
   reloading cannot re-roll offers or inventory (anti-exploit AX-9). Player-caused state differences still change
   outcomes through state, not through re-rolled randomness.
-- Test: SHA-256 digest of the first 1 000 MAINSTREAM vehicles for seed (7, day 3) is fixed
+- Branches: the same step index on two branches yields the same identities and attributes; state-dependent
+  replenishment may add further ordinals on one branch only — never a reused identity (regression
+  `phase0-probes/regress/regress_p1_05_npc_identity.py`).
+- Test: SHA-256 digest of the first 1 000 MAINSTREAM vehicles for (campaign seed 7, market step 3, ordinals 0..999) is fixed
   (`d63a888c…6afcb`, evidence/sim/npcgen_ref.out.md); C# must reproduce it (T-GEN-1).
 
 ## 3. Causal chain

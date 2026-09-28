@@ -44,7 +44,7 @@ P0/P1. Only disposable probes (`phase0-probes/`) and Phase-0 corrections are all
 | R-TIME-1 | OPEN RISK | time-skip detection heuristic | capped credits | T-TIME-2 + runtime sleep test |
 | R-L10N-1 | ASSUMPTION A-L10N-1 | GTA font glyph coverage for special characters | ASCII-safe formatting until UI-S1 | UI-S1 |
 | R-ODO-1 | OPEN RISK | teleport vs. legitimate high-speed movement (jets carrying cars, cargobob) misclassified | attachment check + speed-consistency rule | T-ODO-2/6 |
-| R-TX-1 | DESIGN CONSTRAINT | money-neutral transactions cannot use wallet evidence | they carry no game-side effects (pure DB) | T-TX-4 |
+| R-TX-1 | DESIGN CONSTRAINT | no transaction recovery uses wallet evidence (D-TX-4) | money-neutral and system transactions carry no game-side effect (pure DB, single commit) | T-TX-4 |
 
 ## 3. Open decisions
 

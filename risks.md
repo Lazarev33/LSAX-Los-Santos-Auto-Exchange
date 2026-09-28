@@ -33,4 +33,4 @@ closure type (OFFLINE / RUNTIME) is `spec/LSAX-RISK-REGISTER.md` (same IDs). Upd
 | R-COMP-1 | P1 | ASSUMPTION | Third-party mod behaviours assumed (mods unavailable in Phase 0). | Conservative "never own" matrix + forbidden-native IL scan; exit: full-modpack P-SL-01/P-ID-01 runs log no matrix violation (RUNTIME). |
 | R-L10N-1 | P2 | ASSUMPTION A-L10N-1 | GTA font glyph coverage for NBSP/typographic characters unknown. | ASCII-safe formatting until UI-S1. |
 | R-ODO-1 | P2 | OPEN RISK | Teleport vs legitimate fast transport (cargobob, trailer) misclassified. | Attachment check + speed consistency; T-ODO-2/6. |
-| R-TX-1 | P2 | DESIGN CONSTRAINT | Money-neutral txns cannot use wallet evidence. | They carry no game-side effects (pure DB, atomic). |
+| R-TX-1 | P2 | DESIGN CONSTRAINT | No transaction recovery uses wallet evidence (D-TX-4). | Money-neutral and system transactions carry no game-side effects (pure DB, single commit, TSM §3a). |
