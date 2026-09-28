@@ -25,7 +25,7 @@ is `spec/LSAX-RISK-REGISTER.md` (same IDs).
 | R-VAL-1 | P2 | ASSUMPTION A-VAL-1 | `GET_VEHICLE_MODEL_VALUE` (handling `nMonetaryValue`) is not a usable MSRP seed for add-ons. | LSAX catalogue overrides; class-default fallback; debug report of unpriced models. |
 | R-UI-1 | P1 | OPEN RISK | No renderer proven on GTA Legacy + SHVDN 3.7 + current modpack. | UI spike UI-S1 with pass/fail criteria (LSAX-MASTER-SPEC §20); Core has no renderer dependency. |
 | R-PERF-1 | P2 | OPEN RISK | `World.GetNearbyVehicles` / pool reads cost at high entity counts unknown. | Bounded cadence + caps in LSAX-PERFORMANCE-BUDGET.md; Stage 12 measurement. |
-| R-TIME-1 | P2 | OPEN RISK | GTA time-skip detection (sleep) via clock jumps is heuristic. | Credit capped (≤ 12 MT h per event, ≤ 24 per 24 active hours); trainer clock changes can only add bounded credit. |
+| R-TIME-1 | P2 | OPEN RISK | GTA time-skip detection (sleep) via clock jumps is heuristic. | Credit capped (≤ 12 MT h per event; total credit ≤ base MT accrued over the last 1 440 base MT min, i.e. at most doubles the MT rate); trainer clock changes can only add bounded credit. |
 | R-ID-4 | P1 | OPEN RISK | Story personal vehicles may be mission entities (wrong exclusion/inclusion). | P-ID-01 logs mission flag + population type; rule refined before Stage 3 (OD-4). |
 | R-ID-5 | P2 | ACCEPTED LIMITATION | Trainer clone spawned while original is Dormant may bind first (collision C9). | One VehicleId/title → no value duplication; original becomes AMBIGUOUS when seen. |
 | R-COMP-1 | P1 | ASSUMPTION | Third-party mod behaviours assumed (mods unavailable in Phase 0). | Conservative "never own" matrix + forbidden-native IL scan; T-COMP-2..6 in Stage 12. |

@@ -45,7 +45,7 @@ SPEC_APPROVED requires the checklist in LSAX-MASTER-SPEC-v1.0.md Appendix L with
 | Criterion | Measure |
 |---|---|
 | Odometer accuracy and filtering | T-ODO-1 (±2 %), T-ODO-2 (0 m on 20 teleports), T-ODO-3 (±3 % at 15 FPS), T-ODO-4/5/6 (0 m) |
-| Condition model | component wear deterministic from logged inputs (replay test); native repair restores body only per §07 rules; trainer "fix" does not reset mech or odometer (10/10) |
+| Condition model | T-COND-1 calibration within ±5 %; component wear deterministic from logged inputs (replay test); native repair restores body only per §07 rules; trainer "fix" does not reset mech or odometer (10/10) |
 | BaselineMods/CurrentMods/ModificationHistory | snapshot at each lifecycle checkpoint (registration, acquisition, garage store, listing, inspection, transaction, periodic ≤ 1/60 s); 10 LSC visits → exact mod diff events |
 | LSC/Benny's signal | used only if a probe shows ≥ 95 % reliable entry/exit detection; otherwise disabled (snapshots remain authoritative) |
 

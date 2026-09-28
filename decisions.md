@@ -38,3 +38,15 @@ in `phase0-probes/sim` failed; the failing run is described so the change is aud
 | D-GEN-5 | Constraint C9: owners ≤ 2 + age_months / 36. | **Sim-driven.** Output showed 4 owners at 50 months. | DESIGN DECISION |
 | D-HEAT-3 | Heat decay uses floor division; retention 9911 bp/h (vehicle, half-life 72 MT h) and 9949 bp/h (player, 121 MT h). | **Sim-driven.** With `rdiv` decay has a fixed point at 52 (52 × 0.9904 = 51.5 → 52) and heat never reaches 0. | DESIGN DECISION |
 | D-HEAT-6 | Fence haircut gains +400 bp per underground sale beyond 2 within 48 MT h (cap +2000 bp, total ≤ 9000 bp). | **Sim-driven.** Without it the farming loop paid the same per car until the daily cap. | DESIGN DECISION (tunable) |
+
+## Architecture, domain, persistence, world (IDs referenced by spec documents)
+
+| ID | Decision | Rationale / evidence | Status |
+|---|---|---|---|
+| D-ARCH-1 | Layering: `LSAX.Core` (netstandard2.0, BCL only) ← ports ← `LSAX.Persistence`, `LSAX.Localization`, `LSAX.Adapters.Shvdn` (net48), `LSAX.Ui.<Renderer>`, `LSAX.Diagnostics`. Core never references SHVDN, SQLite or any UI renderer. | Mandatory invariant 5; testability on CI without GTA (TEST-STRATEGY L1/L2). Enforced by T-ARCH-1. | DESIGN DECISION |
+| D-DB-3 | Pre-load native SQLite with `LoadLibraryW(<scripts>/LSAX/native/x64/e_sqlite3.dll)` once per process before first use; verify loaded module path. | E6-1 shadow copying + E6-4 SQLitePCLRaw searches only from `Assembly.Location`. | DESIGN DECISION → P-DB-01 |
+| D-DOM-3 | Destroyed / Retired / Missing / Model-unavailable are physical **lifecycle** states, orthogonal to ownership, title and market state; the owner of record persists. | Brief asks to separate ownership/provenance from lifecycle. | DESIGN DECISION |
+| D-ECO-2 | Wallets are per protagonist (`SP0/1/2_TOTAL_CASH`); any LSAX money operation by a non-protagonist player model is refused; wallet writes are read-verify-write-verify within one tick. | E2-1/E2-2 (getter returns 0, setter no-op, absolute set). | DESIGN DECISION |
+| D-ID-5 | Vehicles delivered by LSAX receive a unique LSAX-issued plate recorded in the registration. | Removes most duplicate-plate collisions for LSAX-originated vehicles (collision matrix C7/C12). | DESIGN DECISION |
+| D-L10N-1 | Core emits `MessageRef { key, typed params }`, never display text; rendering happens in `Localizer`. | Invariant 6; enables locale switch and mail re-rendering. | DESIGN DECISION |
+| D-WORLD-2 | LSAX never deletes entities by a handle remembered across a domain reload (not in `Aborted`); a bounded start-up sweep deletes only entities carrying the current-session LSAX ownership decorator and not occupied by the player; everything else is released with `SET_ENTITY_AS_NO_LONGER_NEEDED`. | E1-4: `Aborted` may run in the new session where the handle may belong to another entity (reference SellCars deletes in `Aborted`, R9). | DESIGN DECISION |

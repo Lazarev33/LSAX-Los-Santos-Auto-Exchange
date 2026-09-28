@@ -19,6 +19,7 @@ feasibility.md and continue from the first item not marked [x]. Do not restart P
 - 2026-09-28 S1: Resumed with auto mode off (Bash via normal approval). Confirmed branch
   claude/focused-thompson-ilnspm (no commits yet), progress.md preserved. Committing checkpoint,
   then continuing from P0-01.
+- 2026-09-28 S2: P0-01..P0-08 completed in session S1 (see checklist). Archive packaged; push pending (P0-09).
 
 ## Checklist
 
@@ -79,6 +80,22 @@ feasibility.md and continue from the first item not marked [x]. Do not restart P
       [x] LSAX-LOCALIZATION-CONTRACT.md  [x] LSAX-COMPATIBILITY-CONTRACT.md  [x] LSAX-PERFORMANCE-BUDGET.md
       [x] LSAX-TEST-STRATEGY.md     [x] LSAX-STAGE-ACCEPTANCE.md  [x] LSAX-RISK-REGISTER.md
       [x] LSAX-MASTER-SPEC-v1.0.md (sections 00-30 + appendices, SPEC_APPROVED checklist)
-- [ ] P0-07 Self-audit / consistency pass
-- [ ] P0-08 SHA-256 manifest + LSAX-MASTER-SPEC-v1.0-DRAFT1.zip
-- [ ] P0-09 Commit + push to claude/focused-thompson-ilnspm
+- [x] P0-07 Self-audit / consistency pass
+      Mechanical: phase0-probes/tools/xref_check.py (IDs defined, paths exist, risk sets equal, sections 00-30,
+      appendices A-L). First run: 32 problems (7 decision IDs, 8 assumption IDs, T-ARCH-1, UI-S1, S-SL-1 undefined +
+      checker range handling) -> fixed (decisions.md architecture block, RISK-REGISTER §4 assumption register,
+      TEST-STRATEGY rows) -> PASS (230 IDs).
+      Semantic: fixed R-TIME-1 cap wording; added T-COND-1 calibration (runtime wear vs generation wear mismatch
+      1.9 vs 1.2 M-points/1000 km); labelled in-session anchoring as PC-1 fallback not covered by the sim; fixed
+      master §29 P1 count (12). Stale-constant grep clean. Sim source hashes == evidence/sim/SUMMARY.md.
+      Hygiene: no personal paths in tracked files (only container clone paths in this file); no binaries tracked.
+- [x] P0-08 SHA-256 manifest + LSAX-MASTER-SPEC-v1.0-DRAFT1.zip
+      Built by phase0-probes/tools/package.py -> release/LSAX-MASTER-SPEC-v1.0-DRAFT1.zip (+ .zip.sha256);
+      MANIFEST.sha256 inside covers every packaged file (git-tracked files only; bin/obj never packaged).
+- [ ] P0-09 Commit + push to claude/focused-thompson-ilnspm — performed after packaging; the repository copy
+      of this file (not the archived copy) records the push result.
+
+## Final state for the reviewer
+- SPEC_APPROVED is NOT self-granted. Gate item "save/load persistence model proven feasible" = FAIL (BLOCKER B-01).
+- Next action for the project owner: run phase0-probes (P-SL-01 required, P-DB-01 required, P-ID-01/P-SL-02 optional)
+  on the target PC per phase0-probes/README-PROBES.md, then send logs back for B-01 closure.

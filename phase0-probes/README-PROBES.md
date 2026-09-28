@@ -7,7 +7,7 @@ They were compile-checked against `ScriptHookVDotNet3` 3.6.0 (NuGet) and have **
 | Probe | Project | Writes game state? | Resolves |
 |---|---|---|---|
 | P-SL-01 SessionSignalProbe | `shvdn/LsaxPhase0Probe` | No | A-SL-1, A-SL-3, A-SL-5, A-SL-6, A-SL-7 → BLOCKER B-01 |
-| P-SL-02 AnchorCarrierProbe | `shvdn/LsaxPhase0Probe` | **Yes (SP stats)**, opt-in + consent phrase | optional strengthening S-SL-1 |
+| P-SL-02 AnchorCarrierProbe | `shvdn/LsaxPhase0Probe` | **Yes (SP stats)**, opt-in + consent phrase | optional fallback F1 (LSAX-SAVELOAD-FEASIBILITY.md §7) |
 | P-ID-01 IdentityProbe | `shvdn/LsaxPhase0Probe` | Registers one decorator, tags one vehicle; opt-in | A-ID-1 .. A-ID-3 |
 | P-DB-01 SqliteReloadProbe | `shvdn/LsaxPhase0SqliteProbe` | No (own DB file only); opt-in | A-DB-3, R-DB-1 |
 

@@ -86,8 +86,9 @@ synchronisation model:
 ### 4.3 Anchoring algorithm (normative; mirrors `phase0-probes/sim/journal_timeline_ref.py::anchor`)
 
 ```
-ANCHOR(at every LSAX session start; also on in-session discontinuity: P decreases, or W changes without an
-       LSAX/observed cause while P jumps):
+ANCHOR(at every LSAX session start. In-session triggering — P decreases, or W changes without an LSAX/observed
+       cause while P jumps — is the PC-1 FALLBACK (§7) and is NOT exercised by the Phase 0 simulation, which
+       anchors only at session start):
   read F=(P,W) in the first tick; base = stop marker if clean else heartbeat; down = wall_now - base.wall
   pending = transactions in state PREPARED (≤ 1 by construction)
   if save files changed since last observation: create ghost timeline(parent=head, fork_p=base.p);

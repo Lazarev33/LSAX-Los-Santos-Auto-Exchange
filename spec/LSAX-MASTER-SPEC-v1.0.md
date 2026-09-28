@@ -129,6 +129,12 @@ BODY, INTERIOR. `M = 35 % ENGINE + 20 % TRANSMISSION + 15 % SUSPENSION + 15 % BR
   `max(BODY, 900)` and ENGINE collision damage; **km-based wear is restored only by LSAX service** (`SERVICE_PAY`);
   undocumented repairs (trainer/unknown) are recorded `REPAIR(documented=false)`. A trainer "fix" can never reset
   mechanical wear or odometer (AX-6).
+- **Consumables and calibration:** BRAKES and TYRES are consumables restored to 1000 by a documented service; the other
+  components are restored only by rebuild services. Runtime wear rates are **initial** and must be calibrated in
+  Stage 2 against the generation model (NPC-GEN §4.4, net 1.2 M-points per 1 000 km incl. typical servicing):
+  **T-COND-1** — a simulated COMMUTER vehicle (15 000 km/yr, services per the §4.5 schedule) driven 100 000 km with the
+  runtime wear model must end within ±5 % of the generation model's M at the same age/odometer. This keeps player-driven
+  and generated histories on one scale.
 
 **Modifications:** `BaselineMods` (generated spec for NPC vehicles; snapshot at registration for world vehicles,
 flagged "observed baseline"), `CurrentMods` (latest snapshot), `ModificationHistory` (diffs with MT/OD stamps).

@@ -21,6 +21,7 @@ Stage gates additionally require the listed L3 runs (LSAX-STAGE-ACCEPTANCE.md).
 
 | ID | Area | Test | Pass |
 |---|---|---|---|
+| T-ARCH-1 | architecture | reference-graph check: `LSAX.Core` references only BCL assemblies (no SHVDN, SQLite, renderer) | 0 forbidden references |
 | T-MATH-1 | arithmetic | `rdiv`, `interp`, `round_money`, SplitMix64 seed-0 output, rejection sampling vectors | exact equality with Python reference |
 | T-VAL-1..4 | valuation | 12 golden vectors (FMV, BUV, CAV, A, dealer, fence, chop, export) | exact equality with `valuation_ref.py` |
 | T-VAL-5 | valuation | breakdown reconciliation | recompute from lines == FMV, 100 % of grid |
@@ -29,6 +30,7 @@ Stage gates additionally require the listed L3 runs (LSAX-STAGE-ACCEPTANCE.md).
 | T-HEAT-1..6 | Heat | LSAX-HEAT-AND-UNDERGROUND-MODEL.md §9 | as specified |
 | T-TIME-1 | time | AT from synthetic GT streams (negative Δ, 5 s stall, 10 FPS, pause toggles) | exact expected AT |
 | T-TIME-2 | time | MT base rate, skip credit caps (12 h sleep → 720; 3 sleeps/day → ≤ 1 440), negative GC jump → 0, offline → 0 | exact |
+| T-COND-1 | condition calibration | runtime wear model vs generation model: COMMUTER, 100 000 km, scheduled services | final M within ±5 % (MASTER §07) |
 | T-GEN-1..7 | NPC generation | LSAX-NPC-GENERATION-MODEL.md §8 | as specified |
 | T-TX-1 | idempotency | same key twice on the active path → second returns DUPLICATE with identical outcome, no effect | 100 % |
 | T-TX-2 | validation | each precommit rule (TSM §6) has a failing and a passing case | 100 % |
@@ -68,6 +70,7 @@ Stage gates additionally require the listed L3 runs (LSAX-STAGE-ACCEPTANCE.md).
 | T-ODO-5 | stream gaps / handle reuse | vehicle despawned and respawned; unrelated vehicle reusing handle | no distance transferred |
 | T-ODO-6 | carried vehicles | vehicle on a trailer / flatbed / cargobob | 0 m added while attached |
 | T-RT-TX-1 | wallet | 100 buy/sell via debug adapter per protagonist | wallet deltas exactly = committed amounts |
+| UI-S1 | renderer feasibility spike | 8 pass/fail items in LSAX-MASTER-SPEC-v1.0.md §20 (glyphs, cost, input, isolation, reload, layouts, soak) | all 8 pass for the chosen renderer |
 | T-RT-UI-1 | UI spike | LSAX-MASTER-SPEC §20 UI-S1 | pass/fail criteria there |
 | T-COMP-1..7 | compatibility | LSAX-COMPATIBILITY-CONTRACT.md §5 | as specified |
 | T-PERF-1..8 | performance | LSAX-PERFORMANCE-BUDGET.md §6 | as specified |

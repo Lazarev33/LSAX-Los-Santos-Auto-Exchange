@@ -52,3 +52,26 @@ IDs match `risks.md`.
 | OD-4 | story personal vehicle policy | sellable (with respawn block) vs never sellable | S3 | P-ID-01 |
 | OD-5 | legacy registration UX | opt-in wizard at first run vs on first entry | S1a/S3 | owner preference |
 | OD-6 | underground unlock content | contact mission design | S9 | owner preference |
+
+## 4. Assumption register
+
+"Relied upon" = the design depends on it; "not relied upon" = a hypothesis measured only for tuning.
+
+| ID | Assumption | Relied upon? | Closed by |
+|---|---|---|---|
+| A-SL-1 | SP save load restarts the SHVDN script domain (new ScriptHookV fiber) | yes (or polling fallback) | P-SL-01 PC-1 |
+| A-SL-3 | `Aborted` runs with post-load game state visible | no (design never reads game state in `Aborted`) | P-SL-01 PC-6 |
+| A-SL-4 | a GTA save snapshot never interleaves one LSAX tick | yes | source E1-8; runtime crash tests (S1b) |
+| A-SL-5 | `SPx_TOTAL_CASH` restored from the save on load | yes | P-SL-01 PC-3 |
+| A-SL-6 | a persisted, monotonic play-time stat exists | yes | P-SL-01 PC-2 |
+| A-SL-7 | save-file writes observable (mtime/size/hash) while LSAX runs | yes | P-SL-01 PC-4 |
+| A-ENV-1 | user's SHVDN 3.7.x lifecycle/money/decorator code equals pinned source @56ba3bf | yes | P-SL-01 logs version |
+| A-DB-2 | CLR defers `Thread.Abort` during native SQLite calls; SQLite atomic commit survives process kill | yes | documented platform semantics; P-DB-01 reload tests |
+| A-DB-3 | default SQLitePCLRaw native lookup fails inside SHVDN's shadow-copied domain | no (mitigated by D-DB-3 either way) | P-DB-01 step 1 |
+| A-ID-1 | decorators survive stream-out/in of the same entity | no | P-ID-01 |
+| A-ID-2 | decorators survive garage store/retrieve and save/load | no (expected false) | P-ID-01 |
+| A-ID-3 | entity handles change when the game recreates a vehicle | no (design handles both) | P-ID-01 |
+| A-VAL-1 | `GET_VEHICLE_MODEL_VALUE` (handling `nMonetaryValue`) is a usable MSRP seed for add-ons | partly (fallback only) | T-COMP-6 report |
+| A-L10N-1 | GTA fonts render Cyrillic (official RU localisation) but NBSP/typographic glyphs are unproven | yes (Cyrillic) / no (typography) | UI-S1 |
+| A-COMP-1 | Unified Shadow Logger can tail a UTF-8 line log at a configurable path | yes | Stage 12 |
+| A-COMP-2 | third-party mod behaviours as stated in COMPATIBILITY §1 | yes (conservatively) | T-COMP-2..6 |
