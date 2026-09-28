@@ -1,6 +1,11 @@
 # LSAX — Canonical Time Model
 
-Document: LSAX-TIME-MODEL.md · Spec: LSAX MASTER SPEC v1.0 DRAFT1 · Status: DRAFT for independent audit
+Document: LSAX-TIME-MODEL.md · Spec: LSAX MASTER SPEC v1.0 DRAFT2 · Status: DRAFT for independent re-audit
+
+DRAFT2 (audit P1-03, decision D-TIME-2): one coherent contract — **PT is an anchor coordinate only; MT is never
+reconstructed from PT**; MT is restored exclusively from LSAX's own durable records; every skip credit is durable at
+the moment it is granted. Reference model `phase0-probes/sim/time_ref.py`; regression
+`phase0-probes/regress/regress_p1_03_time.py`.
 
 LSAX has **no universal clock**. It has seven time domains with fixed owners and uses. Gameplay rules may only
 use the domain assigned to them in §3. All values are integers.
@@ -12,7 +17,7 @@ use the domain assigned to them in §3. All values are integers.
 | WALL | Real UTC time | `DateTime.UtcNow` (.NET BCL) | ms, int64 | yes (logs, ledger, stop markers) | no (system clock can change) | VERIFIED (BCL) |
 | GT | GTA game timer | `GET_GAME_TIMER` = `Game.GameTime` (E5-1) | ms, int32 | **never** | within a session only; behaviour across load not assumed | VERIFIED (API) |
 | AT | Active session time | LSAX: Σ clamped GT deltas while active (§2.1) | ms, int64 | no (per session) | yes | DESIGN DECISION |
-| PT | Persisted play-time stat | SP stat read via `STAT_GET_INT` (name TBD by P-SL-01) | ms (granularity G) | inside the GTA save | assumed | **ASSUMPTION A-SL-6** |
+| PT | Persisted play-time stat | SP stat read via `STAT_GET_INT` (name TBD by P-SL-01) | ms (granularity G) | inside the GTA save | assumed within a session | **ASSUMPTION A-SL-6** — anchor coordinate only (save/load exclusion); never a gameplay or MT source |
 | MT | Market Time | LSAX canonical gameplay clock (§2.2) | MT minutes, int64 | yes, timeline-coupled | yes along a timeline path | DESIGN DECISION |
 | GC | GTA in-game clock | `GET_CLOCK_*` (E4-1), `GameClock` (E5-4) | date + h:m:s | inside the GTA save | no (sleep, trainers, load) | VERIFIED (API) |
 | OD | Odometer distance | LSAX integration (LSAX-MASTER-SPEC §07) | metres, int64 | yes, timeline-coupled | yes per vehicle | DESIGN DECISION |
@@ -40,10 +45,19 @@ Each LSAX tick: `Δ = GT_now − GT_prev`.
   event), subject to a rolling cap of total credits ≤ base MT accrued over the last 1 440 base MT min (at most
   doubles the rate). Negative GC jumps (trainer set-back, load) are ignored. Label: DESIGN DECISION + OPEN RISK
   R-TIME-1 (heuristic).
-- **Persistence:** MT is timeline-coupled. Every commit stores `mt`; an `mt_checkpoint(p, mt)` journal event is
-  written every 60 s of AT. After anchoring at play-time P:
-  `MT(P) = mt_cp + rdiv(P − p_cp, 2000)` using the last checkpoint on the anchored path with `p_cp ≤ P`.
-  Error ≤ skip credits granted inside one 60 s checkpoint interval.
+- **MT state** = `(mt, base_mt, recent_credits)`: the MT value, the base MT accrued (from AT only) and the credits
+  granted inside the rolling window. The rolling-cap bookkeeping is timeline state like MT itself.
+- **Persistence (normative):** MT is timeline-coupled and LSAX-internal. Durable records of the MT state:
+  (1) `SYS_MT_CHECKPOINT` system transaction (TRANSACTION-STATE-MACHINE §3a) every 60 s of AT **and immediately
+  whenever a skip credit is granted** (no credit ever lives only in memory); (2) every commit stamps `mt`;
+  (3) the in-memory MT state is flushed in `Aborted` (clean stop — LSAX's own memory, no game read); (4) every
+  OBSERVED save-ledger row stores the MT state sampled at the observing poll, **after** skip detection in that tick
+  (`mt_obs`, SAVELOAD §4.2).
+- **Restore at anchoring (normative):** continuation → the flushed MT state (clean stop) or the last durable
+  checkpoint (unclean stop: at most one checkpoint interval — 30 MT min — of **base** MT is lost; a credit is never
+  lost); anchoring to a save file → that ledger row's MT state; anchoring to EMPTY → the campaign root MT state;
+  explicit RECONCILE resolution → the chosen candidate's MT state. **No formula from PT is ever used.** Error bound
+  for a save: the poll bracket (≤ 1 MT min while a save event is active, since the ledger is polled every tick then).
 - **Offline (GTA closed):** MT does **not** advance. DESIGN DECISION. Reasons: (1) the save being loaded cannot
   know how much real time passed, so offline progression would decouple LSAX from the save; (2) system-clock
   manipulation would become an exploit; (3) determinism of replay.
@@ -54,8 +68,10 @@ Each LSAX tick: `Δ = GT_now − GT_prev`.
 
 ### 2.3 PT — play-time stat
 
-Used **only** for save/load anchoring and commit stamping (LSAX-SAVELOAD-FEASIBILITY.md). Never used to time
-gameplay (it is not proven to exist; fallback anchoring must not change gameplay timing).
+Used **only** as the save/load anchor coordinate (hypothesis exclusion, LSAX-SAVELOAD-FEASIBILITY.md §4.3) and for
+stamping commits (`p_ms`). Required PT semantics are exactly those of A-SL-6/A-SL-13 (exact restore on load,
+non-decreasing within a session, small at a new game) — P-SL-01 PC-2. PT's behaviour during pause, loading, switch
+or fades is **not** required and not assumed: MT never depends on it (regression T12).
 
 ### 2.4 GC — GTA clock
 
@@ -79,7 +95,7 @@ verified in source). GC is never authoritative for expiry, decay or age.
 | Sleep / time skip | MT credit (capped) | world "moves on" a bounded amount |
 | Save/load rollback | MT via anchoring | coupling |
 | Logs, diagnostics, ledger, stop markers | WALL | forensic |
-| Anchoring window bounds | PT + WALL (play time ≤ wall time) | LSAX-SAVELOAD-FEASIBILITY.md §4.2 |
+| Anchoring exclusion (poll bracket, LIVE test) | PT | LSAX-SAVELOAD-FEASIBILITY.md §4.2–§4.3; never MT |
 | Tick cadence, cache TTL, notification on-screen duration | GT/AT | session-local |
 | Anti-farm windows (e.g. underground sales per 48 MT h) | MT | save-coupled; cannot be reset by waiting offline |
 
@@ -91,7 +107,7 @@ verified in source). GC is never authoritative for expiry, decay or age.
 | Skip credit threshold / per-event cap / rolling cap | 30 / 720 / 1 440 MT min | yes |
 | AT stall threshold | 1 000 ms | yes |
 | Fade-out exclusion after | 5 000 ms | yes |
-| MT checkpoint interval | 60 s AT | yes (trades DB writes vs rewind precision) |
+| MT checkpoint interval | 60 s AT, and immediately at every skip credit | interval yes (bounds base-MT loss on an unclean stop); the immediate credit checkpoint is not tunable |
 | MT month (for age tables) | 30 MT days = 43 200 MT min | no |
 
 ## 5. Tests (see LSAX-TEST-STRATEGY.md T-TIME-*)
@@ -99,7 +115,11 @@ verified in source). GC is never authoritative for expiry, decay or age.
 - Pure: AT accumulation with synthetic GT streams (negative Δ, 5 s stall, 10 FPS, pause toggles) → exact
   expected AT; MT from AT at base rate; skip credit caps (single 12 h sleep → 720; three sleeps in one MT day
   → capped at 1 440 total credit); negative GC jump → 0 credit; offline gap → 0 MT.
-- Anchoring: MT(P) reconstruction from checkpoints equals the value recorded at save within one checkpoint
-  interval (simulation extension of `journal_timeline_ref.py`, Stage 1).
+- MT restore (regression `regress_p1_03_time.py`, 21 checks): pause, loading, switch, short/long fades, GT stall,
+  sleep credit durable at grant, save immediately after sleep restores MT exactly, crash before the periodic
+  checkpoint loses no credit, save/load around a skip (credit re-earned only when the loaded world precedes the
+  sleep; rolling cap carried with the MT state), MT frozen while LSAX is not running, rolling cap, and restored MT
+  identical under every PT pause/loading semantic. The DRAFT1 rule `MT(P) = mt_cp + rdiv(P − p_cp, 2000)` is
+  reproduced as the defect (restores hours behind after a sleep + save).
 - Runtime: 30 min active play → MT advance 900 ± 1 MT min (± 0.1 %), with the pause menu open 10 min in between
   → +0 during pause.

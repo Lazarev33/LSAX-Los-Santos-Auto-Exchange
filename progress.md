@@ -155,7 +155,14 @@ the audited branch `claude/focused-thompson-ilnspm`, DRAFT1 files, PR #1 or `mai
       risks.md. Regression regress/regress_p1_01_02_identity.py 34/34 PASS (DRAFT1 defect reproduced in H1, H2, H4,
       H6, C1, C2; randomized 1500 dense populations: DRAFT2 == unbounded reference, DRAFT1 39 false BIND / 38 false
       NO MATCH).
-- [ ] C0-08 Correct P1-03 time model
+- [x] C0-08 Correct P1-03 time model
+      D-TIME-2 (refined): PT anchor-only; MT state (mt, base_mt, recent credits) restored only from LSAX records
+      (Aborted flush / durable checkpoint / save-ledger row / campaign root); credit durable at grant; MT frozen while
+      LSAX is down. Self-found during regression: the rolling-cap bookkeeping is timeline state and must be restored
+      with MT (else reloading a pre-sleep save wrongly blocks a legitimate credit). Files: sim/time_ref.py (new),
+      TIME-MODEL (header, §1, §2.2, §2.3, §3, §4, §5), MASTER §06/§07, SAVELOAD §4.2, DB-SCHEMA save_ledger MT state,
+      decisions D-TIME-2. Regression regress/regress_p1_03_time.py 21/21 PASS (DRAFT1 MT(P) defect reproduced in T7
+      and T8).
 - [ ] C0-09 Correct P1-04 system journal protocol
 - [ ] C0-10 Correct P1-05 NPC generation identity
 - [ ] C0-11 Correct P1-06 LEGACY provenance
@@ -178,7 +185,7 @@ the audited branch `claude/focused-thompson-ilnspm`, DRAFT1 files, PR #1 or `mai
 | P0-04 | SOURCE VERIFIED: MASTER §28 L345, §30 L378, App. L L432-433; STAGE-ACCEPTANCE L19/34/39; RISK-REGISTER rows B-01, R-SL-2/3/4, R-DB-1, R-COMP-2, R-ENV-1, R-ID-1, R-UI-1, R-COMP-1, OD-3, OD-5, A-SL-4 reference S1a/S1b | CORRECTED (C0-06): D-GATE-1; regress_p0_04_gate 24/24 PASS |
 | P1-01 | SOURCE VERIFIED: DOMAIN §4.2 L95-102 ("can never inherit"), C11 L161; mutation-while-bound accepts plate/colour change under handle+model+time+position continuity | CORRECTED (C0-07): D-ID-6/D-ID-8; regress_p1_01_02 H1–H8 PASS |
 | P1-02 | SOURCE VERIFIED: DOMAIN §4.4 L125-128 "bounded to ≤ 32 candidates … nearest last-seen first" before uniqueness gap test | CORRECTED (C0-07): D-ID-7 lossless K1/K2; regress_p1_01_02 C1–C6 PASS |
-| P1-03 | SOURCE VERIFIED: TIME L45-46 (MT(P) reconstruction from PT + accepted skip-credit loss) vs L57 (PT "only" anchoring); MASTER App. L L419 | verified |
+| P1-03 | SOURCE VERIFIED: TIME L45-46 (MT(P) reconstruction from PT + accepted skip-credit loss) vs L57 (PT "only" anchoring); MASTER App. L L419 | CORRECTED (C0-08): D-TIME-2; regress_p1_03_time 21/21 PASS |
 | P1-04 | SOURCE VERIFIED: DB-SCHEMA L48 `journal_event.txn_id NOT NULL REFERENCES txn`; L118 event types incl. OdometerCheckpoint/MarketStep/MtCheckpoint/HeatDelta; TSM §3 has no system kind | verified |
 | P1-05 | SOURCE VERIFIED: NPC-GEN L17 and DOMAIN L69 `(campaign_seed, market_day, segment, slot)`; MASTER §11 market step every 60 MT min (24 steps/day); slot scope undefined. REPRODUCED with baseline `npcgen_ref.generate` + `derive_seed("vehicle",…)`: two steps of MT day 42 with step-local slots 0..2 → 3/3 identical VehicleIds and byte-identical vehicles. Also observed: raw FNV-1a ids differ only in a few hex digits (weak avalanche) → correction uses a mixing finaliser | reproduced |
 | P1-06 | SOURCE VERIFIED: DOMAIN L191 LEGACY "treated as CLEAN / eligible", L203; TSM L104; MASTER L190. Additional (self-found): DOMAIN title diagram `UNKNOWN --> CLEAN: title verification passed` — verification only checks STOLEN records, so a pre-LSAX/unobserved theft also launders | verified |

@@ -56,7 +56,8 @@ CREATE TABLE save_ledger (sha256 TEXT PRIMARY KEY, kind TEXT NOT NULL CHECK (kin
   campaign_id TEXT NOT NULL REFERENCES campaign, head_txn TEXT,              -- NULL = EMPTY state
   p_lo INTEGER, p_hi INTEGER,                                                -- poll bracket; NULL for PRE_INSTALL
   w0 INTEGER, w1 INTEGER, w2 INTEGER,                                        -- NULL = wallets unknown (changed in bracket)
-  mt_obs INTEGER, gc_obs INTEGER, observed_wall INTEGER NOT NULL,
+  mt_obs INTEGER, mt_base INTEGER, mt_credits_json TEXT, gc_obs INTEGER,   -- MT state at the observing poll (TIME §2.2)
+  observed_wall INTEGER NOT NULL,
   CHECK ((kind = 'PRE_INSTALL' AND p_lo IS NULL AND head_txn IS NULL) OR (kind = 'OBSERVED' AND p_lo <= p_hi)));
 CREATE TABLE slot_state (slot_file TEXT PRIMARY KEY, mtime_wall INTEGER NOT NULL, size INTEGER NOT NULL,
   sha256 TEXT NOT NULL, status TEXT NOT NULL CHECK (status IN ('TRUSTED','PRE_INSTALL','UNTRUSTED')),

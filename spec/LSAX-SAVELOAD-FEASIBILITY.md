@@ -80,7 +80,7 @@ hypothesis (a mismatch proves "the world was not loaded from that file", given A
   head plus the pending transaction rolled forward). EMPTY = no LSAX effects (new campaign semantics, §4.8).
 - **Save ledger** (`save_ledger`, global, never rewinds): one row per content hash LSAX has positive knowledge of.
   `kind=OBSERVED`: written while running and anchored, corroborated by exactly one game save event; stores
-  `head_txn` (active head at observation), play-time bracket `p_lo..p_hi`, wallet vector or NULL, `mt_obs`, `gc_obs`.
+  `head_txn` (active head at observation), play-time bracket `p_lo..p_hi`, wallet vector or NULL, MT state `mt_obs`, `gc_obs`.
   `kind=PRE_INSTALL`: file present at the first-ever start; state EMPTY, fingerprint unknown (NULL).
 - **Slot state** (`slot_state`, per current slot file): `(slot file, sha256, status ∈ {TRUSTED, PRE_INSTALL,
   UNTRUSTED}, reason)`. TRUSTED/PRE_INSTALL iff the file's hash is in the ledger. UNTRUSTED reasons:
@@ -100,9 +100,10 @@ hypothesis (a mismatch proves "the world was not loaded from that file", given A
 - A changed file is **TRUSTED(KNOWN_CONTENT)** if its hash is already in the ledger (byte-identical restore).
 - Else it is **TRUSTED(OBSERVED)** only if exactly one game save event (S15) lies within ±2 s of the file write and
   no other changed file competes for it. The new ledger row records `head_txn = active head`, `p_lo = P at previous
-  poll`, `p_hi = P now`, wallets = current vector **only if unchanged across the bracket** (else NULL), `mt_obs`,
-  `gc_obs`. Correctness of `head_txn`: every transaction polls immediately before its apply and commits in the same
-  tick (A-SL-4), so the head cannot change between the save and the observing poll without a poll in between.
+  poll`, `p_hi = P now`, wallets = current vector **only if unchanged across the bracket** (else NULL), the MT
+  state `mt_obs` (sampled after skip detection in that tick, TIME-MODEL §2.2) and `gc_obs`. Correctness of
+  `head_txn`: every transaction polls immediately before its apply and commits in the same tick (A-SL-4), so the
+  head cannot change between the save and the observing poll without a poll in between.
 - Every other changed file is **UNTRUSTED** (`FOREIGN_WHILE_RUNNING` or `AMBIGUOUS_EVENT`).
 - At startup (before anchoring): every file whose hash differs from `slot_state` is TRUSTED/PRE_INSTALL if its hash
   is in the ledger (`RESTORED_COPY`), else **UNTRUSTED(CHANGED_WHILE_DOWN)**. Events raised while LSAX was down are

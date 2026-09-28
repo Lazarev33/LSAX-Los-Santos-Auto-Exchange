@@ -102,7 +102,8 @@ fallback decision table (§7). **BLOCKER B-01** open.
 ## 06 Canonical Time Model → `LSAX-TIME-MODEL.md`
 
 Seven domains; every subsystem bound to one (§3). MT: 1 MT min per 2 000 ms AT; no offline progression; capped
-sleep credit; rewinds with the save.
+sleep credit, durable at grant; rewinds with the save. PT is an anchor coordinate only — MT is restored from LSAX's
+own records (stop flush, checkpoints, save-ledger MT state), never from PT (D-TIME-2).
 
 ## 07 Odometer / Condition / Modifications (normative here)
 
@@ -115,7 +116,8 @@ sleep credit; rewinds with the save.
   (displacement-based, chord error < 3 % at 15 FPS — T-ODO-3).
 - Pause/loading/fade: no integration; `pos_prev` refreshed on resume. Stream gaps / continuity breaks: `pos_prev`
   reset, nothing added (unobserved distance is not invented). Handle reuse cannot transfer distance (binding rule).
-- Checkpoints to the journal every ≥ 1 km or ≥ 60 s of driving and at lifecycle checkpoints; rewind loses ≤ 1 km.
+- Checkpoints to the journal (`SYS_ODO_CHECKPOINT` system transactions, TSM §3a) every ≥ 1 km or ≥ 60 s of driving and
+  at lifecycle checkpoints; rewind loses ≤ 1 km.
 - Corruption/clamping: monotonic within a timeline; values outside 0…10 000 000 km fail DB CHECKs; repair tool logs
   `DATA_REPAIR`. No external mod or trainer can write LSAX odometer (LSAX-owned).
 
