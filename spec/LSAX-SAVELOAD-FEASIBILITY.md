@@ -272,8 +272,8 @@ Also run **P-DB-01** (SQLite load/reload, attach + online backup of the projecti
   continuation (D-SL-14), hypothesis-exclusion anchoring (D-SL-15/16), pre-signal poll brackets (D-SL-17), the
   save-in-progress gate (D-SL-18), own-evidence
   transaction recovery (D-TX-4/5), always-fork, RECONCILE_REQUIRED with explicit player resolution.
-- **Alternatives rejected:** A (no slot id), C alone (money exploit), B alone (needs the same anchor); DRAFT1
-  INFERRED/ghost downtime lineage and wallet evidence (correlation, audit P0-02/P0-03); a STANDARD policy that
+- **Alternatives rejected:** A (no slot id), C alone (money exploit), B alone (needs the same anchor);
+  DRAFT1 INFERRED/ghost downtime lineage and wallet evidence (correlation, audit P0-02/P0-03); a STANDARD policy that
   accepts despite unexcludable UNTRUSTED files (correlation); an in-save watermark/carrier (unproven persistence —
   may only be added after P-SL-02 proves it).
 - **Consequences:** implementation (after SPEC_APPROVED only) must treat the journal as the source of truth and

@@ -217,7 +217,12 @@ the audited branch `claude/focused-thompson-ilnspm`, DRAFT1 files, PR #1 or `mai
       README-PROBES rewritten as the runtime validation package: target runtime, backup, build, exact install paths,
       launch, T1-T17 with expected log rows, PASS/FAIL rules PC-1..PC-8, P-DB-01/P-ID-01/P-SL-02 procedures, evidence
       collection, cleanup. probe.ini.sample: SessionToken.Enabled. feasibility E9-13/E9-14.
-- [ ] C0-16 Full xref/static/spec self-audit
+- [x] C0-16 Full xref/static/spec self-audit
+      xref_check.py extended (DRAFT2 headers, MASTER §29 counts vs register, every cited regression/model exists,
+      stale-term sweep of 13 categories with explicit allowed-negation contexts; new ID kinds SF-/TM-1/O-SL-).
+      Result on DRAFT2: PASS (282 IDs referenced, all defined). Non-vacuity: the same checker on the DRAFT1 baseline
+      tree reports 72 problems (stale terms in all 13 categories + DRAFT1 headers). TM-1 and O-SL-1 defined in the
+      MASTER glossary. py_compile of all 29 Python files OK; both C# probes rebuilt clean (C0-15).
 - [ ] C0-17 Rebuild DRAFT2 package and hashes
 - [ ] C0-18 Push correction branch
 - [ ] C0-19 Report final status

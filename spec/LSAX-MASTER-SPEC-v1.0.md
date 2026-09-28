@@ -77,6 +77,8 @@ normative for their domains.
 | System transaction | Journaled change without player intent (MT/odometer checkpoint, market step, Heat, expiry); single commit, deterministic key (TSM §3a) |
 | UNTRUSTED save file | Slot file whose content LSAX did not observe being written (copied, pre-existing changes, written while LSAX was down); never lineage (D-SL-13) |
 | Timeline | Branch of LSAX history; forks at every anchoring |
+| TM-1 | Threat model: LSAX defends against accidental/incidental inconsistency (crashes, reloads, other mods, copied or unobserved saves), not against deliberate tampering aimed at LSAX (SAVELOAD §4.9; residual R-SL-7) |
+| O-SL-1 | Deferred optimisation: exclude the LIVE hypothesis by token absence alone, only if P-SL-01 proves the token also survives character switches while LSAX is not running (SAVELOAD §8); not part of DRAFT 2 |
 | Title | Legal standing: CLEAN, SALVAGE, STOLEN, RECOVERED, UNDERGROUND, UNKNOWN (no LEGACY title; D-PROV-1) |
 | VehicleId | 128-bit LSAX identity of a specific vehicle |
 | VH / PH | Vehicle Heat / Player (protagonist) Heat, 0…1000 |

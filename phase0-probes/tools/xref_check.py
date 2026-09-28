@@ -6,6 +6,9 @@ Checks:
   2. Every backticked repository path mentioned exists.
   3. Risk IDs in spec/LSAX-RISK-REGISTER.md and risks.md are identical sets.
   4. Required deliverable files exist and are non-empty; master spec contains sections 00..30 and appendices A..L.
+  5. (DRAFT2) every spec document header says DRAFT2; risk counts in MASTER §29 equal the register; every regression
+     and reference model named in the documents exists; stale DRAFT1 terms appear only in explicitly historical or
+     negated context (Correction Pass 1 sweep list).
 Prints findings; exit code = number of problems (capped at 100)."""
 import os
 import re
@@ -21,7 +24,7 @@ REQUIRED = ["LSAX-MASTER-SPEC-v1.0.md", "LSAX-DOMAIN-MODEL.md", "LSAX-SAVELOAD-F
             "LSAX-STAGE-ACCEPTANCE.md", "LSAX-RISK-REGISTER.md", "LSAX-REFERENCE-REVIEW.md"]
 
 ID_RE = re.compile(r"\b(D-[A-Z0-9]+-\d+|R-[A-Z0-9]+-\d+|B-01|A-[A-Z0-9]+-\d+|E\d-\d+|T-[A-Z0-9]+-\d+|T-[A-Z]+-SIM-\d+|"
-                   r"AX-\d+|P-[A-Z]+-\d+|PC-\d|OD-\d|UI-S1|S-SL-1)\b")
+                   r"AX-\d+|P-[A-Z]+-\d+|PC-\d|OD-\d|UI-S1|S-SL-1|SF-\d|TM-1|O-SL-\d)\b")
 RANGE_RE = re.compile(r"\b(T-[A-Z0-9]+|AX|PC|D-[A-Z0-9]+|T-[A-Z]+-SIM)-(\d+)\s*(?:\.\.|…|–)\s*(?:\1-)?(\d+)\b")
 
 
@@ -84,6 +87,40 @@ def main():
     for a in "ABCDEFGHIJKL":
         if not re.search(rf"^\| {a} \|", master, re.M):
             problems.append(f"MASTER missing appendix row {a}")
+
+    # ---- 5. DRAFT2 consistency
+    for f in sorted(os.listdir(os.path.join(ROOT, "spec"))):
+        head = texts.get(os.path.join("spec", f), "")[:600]
+        if "DRAFT2" not in head and "DRAFT 2" not in head:
+            problems.append(f"HEADER not DRAFT2: spec/{f}")
+    reg_text = texts["spec/LSAX-RISK-REGISTER.md"]
+    p1 = reg_text[reg_text.index("## 1."):reg_text.index("## 2.")]
+    p2 = reg_text[reg_text.index("## 2."):reg_text.index("## 3.")]
+    n_p1 = len(re.findall(r"^\| R-", p1, re.M))
+    n_p2 = len(re.findall(r"^\| R-", p2, re.M))
+    m29 = re.search(r"1 BLOCKER \(B-01\), (\d+) P1 risks.*?(\d+) P2", master, re.S)
+    if not m29 or (int(m29.group(1)), int(m29.group(2))) != (n_p1, n_p2):
+        problems.append(f"MASTER §29 counts {m29.groups() if m29 else None} != register P1={n_p1} P2={n_p2}")
+    for p, t in texts.items():
+        for m in re.finditer(r"`((?:regress|sim)_[a-z0-9_]+\.py|[a-z_]+_ref\.py)`", t):
+            name = m.group(1)
+            if not any(os.path.exists(os.path.join(ROOT, "phase0-probes", d, name)) for d in ("regress", "sim")):
+                problems.append(f"MISSING script `{name}` referenced in {p}")
+    stale = [(r"INFERRED", "INFERRED"), (r"\bghost\b", "ghost"), (r"wallet\s*==\s*`?(cash|wallet)_after", "wallet==after"),
+             (r"LEGACY_OWNED|\bLEGACY\b(?!_TRUSTED)", "LEGACY title"), (r"title verification", "title verification"),
+             (r"market_day", "market_day"), (r"(≤|<=)\s*32 candidates", "<=32 candidates"),
+             (r"projection tables only", "projection-only backup"), (r"stop marker", "stop marker"),
+             (r"\bheartbeat\b", "heartbeat"), (r"MT\(P\)", "MT(P)"), (r"fast path", "fast path"),
+             (r"\bS1[ab]\b", "S1a/S1b")]
+    allowed = re.compile(r"DRAFT1|withdrawn|WITHDRAWN|removed|superseded|SUPERSEDED|no LEGACY|never|There is \*\*no|"
+                         r"\bno title|no \S+ path|not |instead of|reproduc|defect|history|no\b", re.I)
+    for p, t in texts.items():
+        if p in ("progress.md", "decisions.md"):
+            continue                                   # durable history logs
+        for n, line in enumerate(t.splitlines(), 1):
+            for pat, label in stale:
+                if re.search(pat, line) and not allowed.search(line):
+                    problems.append(f"STALE TERM '{label}' at {p}:{n}: {line.strip()[:100]}")
 
     print(f"IDs referenced: {len(referenced)}, defined: {len(defined)}, docs: {len(texts)}")
     for pr in problems:
