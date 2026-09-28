@@ -90,4 +90,17 @@ Full output: `evidence/native_check.txt`, `evidence/save_natives_scan.txt`.
 | E7-2 | `phase0-probes/shvdn/LsaxPhase0SqliteProbe` (P-DB-01, opt-in). | VERIFIED (compile). A Windows deployment build must set `RuntimeIdentifier=win-x64` (the Linux build copied only linux natives). |
 | E7-3 | None of the probes has been executed. Their outputs are the exact experiments required before Stage 1 (see LSAX-SAVELOAD-FEASIBILITY.md §6). | BLOCKER B-01 input |
 
-(Simulations appended below as they complete.)
+## E8 — Offline reference simulations (VERIFIED (sim))
+
+All in `phase0-probes/sim/`, Python 3.11 stdlib only, reproducible with `python3 run_all.py`; outputs and
+source hashes in `evidence/sim/`. "VERIFIED (sim)" proves the **logic** of a contract under stated
+assumptions; it does not prove GTA runtime behaviour.
+
+| ID | Simulation | Result | What it proves / does not prove |
+|---|---|---|---|
+| E8-1 | `lsax_ref_math.py` | PASS | `rdiv` half-away-from-zero, bp maths, piecewise-linear interpolation, SplitMix64 matches the published seed-0 reference output `0xE220A8397B1DCDAF`. |
+| E8-2 | `valuation_ref.py` | PASS: 12 worked vectors inside golden ranges; 4 704-case property grid, 0 failures | Monotonicity (mileage, condition, accidents), floors/ceilings/global band, dealer spread ≥ 18 %, fence < dealer, determinism. Balance constants are INITIAL/TUNABLE. |
+| E8-3 | `npcgen_ref.py` | PASS: 6 segments × 20 000 vehicles, 0 constraint violations, 0 fallbacks | Correlated chain, archetype medians within 15 % of targets, Spearman(age, odo) ≥ 0.6 for road segments, care dominates age (ENTHUSIAST mean M ≥ 750), determinism digest. |
+| E8-4 | `heat_ref.py` | PASS | Half-lives 72 / 121 MT h under floor rounding, decay terminates (≤ 450 h), offline time changes nothing, velocity haircut + daily caps bound farming. |
+| E8-5 | `journal_timeline_ref.py` | PASS: 800 episodes (2 mixes × 2 stat granularities × 200), real SQLite (WAL, synchronous=FULL), 3 566 injected crashes across C0–C3, thousands of loads and LSAX-offline windows; **0 safety-invariant failures** (I0 ground-truth equality, I1 garage, I2 idempotent replay, I3 no double sell, I6 refusal while RECONCILE_REQUIRED); 9 815 successful anchorings; 422 evidence-based roll-forwards; 1 190 evidence-based aborts. RECONCILE_REQUIRED rate: 2.0–3.0 % of anchorings (realistic mix), 3.8–4.3 % (adversarial). | Proves the Anchored-Timeline + transaction-recovery **logic** under A-SL-4/5/6/7. Does not prove those assumptions (→ P-SL-01). The RECONCILE rate is a model property under an unrealistically high crash/load rate, not a runtime measurement. |
+| E8-6 | Sim-driven design corrections (evidence of the process, see decisions.md): D-SL-2 (anchor every start), D-SL-8 (last known wallet includes own writes), D-SL-4 mtime bound, D-SL-9 boundary prefix resolution, D-SL-10 DOWNTIME ghost timeline, D-SL-11 slot pinning, D-TX-1 single-tick PREPARE/APPLY/COMMIT, D-VAL-9, D-GEN-4/5, D-HEAT-3/6. One vacuous "PASS" (every episode reconciled at first anchoring) was caught and a non-vacuity tripwire added. | — |

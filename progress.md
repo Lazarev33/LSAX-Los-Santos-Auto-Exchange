@@ -64,7 +64,19 @@ feasibility.md and continue from the first item not marked [x]. Do not restart P
               NOT executed (no GTA). Procedure + pass criteria: phase0-probes/README-PROBES.md.
               New evidence E6 (shadow copy + SQLitePCLRaw Location-based native lookup), E7.
       [ ] F-d Offline sims (phase0-probes/sim): valuation vectors, heat, NPC gen, journal crash-injection
-      [ ] F-e Record results in feasibility.md; save/load decision record
+          [x] lsax_ref_math.py (rdiv half-away, bp, interp, SplitMix64 ref-checked) PASS
+          [x] valuation_ref.py 12 vectors, golden ranges, 4704-case property grid PASS
+              (sim-driven change: V10 golden range widened -> decisions D-VAL-9)
+          [x] npcgen_ref.py 6 segments x 20k, 0 violations, determinism digest PASS
+              (sim-driven: age-wear cap 180 mo D-GEN-4, owner constraint C9 D-GEN-5)
+          [x] heat_ref.py decay/tiers/farming PASS (sim-driven: floor decay D-HEAT-3 fixed-point bug,
+              retention 9911/9949, velocity haircut D-HEAT-6)
+          [x] journal_timeline_ref.py (Model D anchored timeline + txn journal, crash/load injection) PASS
+              800 episodes, 0 safety failures, RECONCILE 2-4% of anchorings. Went through 5 sim-driven
+              redesigns (decisions D-SL-2, D-SL-8..11, D-TX-1). trace_journal.py = debug tracer.
+          [x] run_all.py -> evidence/sim/*.out.md + SUMMARY.md (all PASS, ~2m15s)
+      [x] F-e Record results in feasibility.md (E8); decisions.md D-SL-*/D-TX-*/D-VAL/D-GEN/D-HEAT
+- [x] P0-05 (closed; runtime proof pending = BLOCKER B-01, owner must run phase0-probes on target PC)
 - [ ] P0-06 Spec documents
 - [ ] P0-07 Self-audit / consistency pass
 - [ ] P0-08 SHA-256 manifest + LSAX-MASTER-SPEC-v1.0-DRAFT1.zip
