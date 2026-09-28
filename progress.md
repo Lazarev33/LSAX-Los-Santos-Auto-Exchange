@@ -176,7 +176,14 @@ the audited branch `claude/focused-thompson-ilnspm`, DRAFT1 files, PR #1 or `mai
       NPC-GEN §2, DOMAIN §4.1, MASTER §10/AX-9/glossary, decisions. Regression regress/regress_p1_05_npc_identity.py
       17/17 PASS (DRAFT1 3/3 collision reproduced; 388 800 ids distinct; replenishment/sold/expired over 200 steps;
       rewind replay identical; branches never reuse an identity; avalanche 32.1 vs DRAFT1 10.6 bits).
-- [ ] C0-11 Correct P1-06 LEGACY provenance
+- [x] C0-11 Correct P1-06 LEGACY provenance
+      D-PROV-1 (refined): LEGACY title and TITLE_VERIFY withdrawn; first-run import UNKNOWN unless LEGACY_TRUSTED
+      (empty until an unspoofable marker is runtime-proven); opt-in never changes the title; no path to CLEAN from
+      UNKNOWN/STOLEN/UNDERGROUND. Files: sim/legacy_ref.py (new), sim/valuation_ref.py (LEGACY_OWNED removed; output
+      byte-identical), DOMAIN §5.2 + first-run import rule + history events, TSM §3/§6, MASTER glossary/§12/§18/§21/
+      AX-5, DB-SCHEMA title CHECK, decisions, RISK-REGISTER/risks R-PROV-1. Regression regress/regress_p1_06_legacy.py
+      75/75 PASS (stolen, ambient, mission, trainer, add-on, legit pre-LSAX, trainer copy of a story car, each with/
+      without opt-in and garage; exhaustive title reachability).
 - [ ] C0-12 Correct P2-01 backup architecture
 - [ ] C0-13 Reconcile all affected documents
 - [ ] C0-14 Add/run deterministic regression suite
@@ -199,5 +206,5 @@ the audited branch `claude/focused-thompson-ilnspm`, DRAFT1 files, PR #1 or `mai
 | P1-03 | SOURCE VERIFIED: TIME L45-46 (MT(P) reconstruction from PT + accepted skip-credit loss) vs L57 (PT "only" anchoring); MASTER App. L L419 | CORRECTED (C0-08): D-TIME-2; regress_p1_03_time 21/21 PASS |
 | P1-04 | SOURCE VERIFIED: DB-SCHEMA L48 `journal_event.txn_id NOT NULL REFERENCES txn`; L118 event types incl. OdometerCheckpoint/MarketStep/MtCheckpoint/HeatDelta; TSM §3 has no system kind | CORRECTED (C0-09): D-JRN-1, TSM §3a; regress_p1_04_sysjournal 68/68 PASS |
 | P1-05 | SOURCE VERIFIED: NPC-GEN L17 and DOMAIN L69 `(campaign_seed, market_day, segment, slot)`; MASTER §11 market step every 60 MT min (24 steps/day); slot scope undefined. REPRODUCED with baseline `npcgen_ref.generate` + `derive_seed("vehicle",…)`: two steps of MT day 42 with step-local slots 0..2 → 3/3 identical VehicleIds and byte-identical vehicles. Also observed: raw FNV-1a ids differ only in a few hex digits (weak avalanche) → correction uses a mixing finaliser | CORRECTED (C0-10): D-GEN-6 injective identity; regress_p1_05_npc_identity 17/17 PASS |
-| P1-06 | SOURCE VERIFIED: DOMAIN L191 LEGACY "treated as CLEAN / eligible", L203; TSM L104; MASTER L190. Additional (self-found): DOMAIN title diagram `UNKNOWN --> CLEAN: title verification passed` — verification only checks STOLEN records, so a pre-LSAX/unobserved theft also launders | verified |
+| P1-06 | SOURCE VERIFIED: DOMAIN L191 LEGACY "treated as CLEAN / eligible", L203; TSM L104; MASTER L190. Additional (self-found): DOMAIN title diagram `UNKNOWN --> CLEAN: title verification passed` — verification only checks STOLEN records, so a pre-LSAX/unobserved theft also launders | CORRECTED (C0-11): D-PROV-1; regress_p1_06_legacy 75/75 PASS |
 | P2-01 | SOURCE VERIFIED: DB-SCHEMA L127 "online backup API … (projection tables only)"; the backup API copies a whole database (schema), not tables | verified |

@@ -45,6 +45,7 @@ P0/P1. Only disposable probes (`phase0-probes/`) and Phase-0 corrections are all
 | R-L10N-1 | ASSUMPTION A-L10N-1 | GTA font glyph coverage for special characters | ASCII-safe formatting until UI-S1 | UI-S1 |
 | R-ODO-1 | OPEN RISK | teleport vs. legitimate high-speed movement (jets carrying cars, cargobob) misclassified | attachment check + speed-consistency rule | T-ODO-2/6 |
 | R-TX-1 | DESIGN CONSTRAINT | no transaction recovery uses wallet evidence (D-TX-4) | money-neutral and system transactions carry no game-side effect (pure DB, single commit) | T-TX-4 |
+| R-PROV-1 | ACCEPTED COST | legitimately owned pre-LSAX vehicles are UNKNOWN (underground only) — no proven ownership signal (D-PROV-1) | LEGACY_TRUSTED rule only after P-ID-01 proves an unspoofable marker + independent review | OD-4/OD-5 decided by owner |
 
 ## 3. Open decisions
 

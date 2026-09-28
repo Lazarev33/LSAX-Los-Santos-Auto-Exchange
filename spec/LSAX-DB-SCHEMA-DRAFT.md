@@ -79,7 +79,7 @@ CREATE TABLE vehicle (vehicle_id TEXT PRIMARY KEY, lsax_vin TEXT NOT NULL UNIQUE
   flags INTEGER NOT NULL DEFAULT 0,                                                  -- CLONE_SUSPECT, GAME_RESPAWN_OF_SOLD, ...
   last_seen_mt INTEGER, last_seen_x REAL, last_seen_y REAL, last_seen_z REAL, last_seen_ctx TEXT);
 CREATE TABLE vehicle_title (vehicle_id TEXT PRIMARY KEY REFERENCES vehicle,
-  status TEXT NOT NULL CHECK (status IN ('CLEAN','SALVAGE','STOLEN','RECOVERED','UNDERGROUND','UNKNOWN','LEGACY')),
+  status TEXT NOT NULL CHECK (status IN ('CLEAN','SALVAGE','STOLEN','RECOVERED','UNDERGROUND','UNKNOWN')),  -- no LEGACY (D-PROV-1)
   since_txn TEXT, since_mt INTEGER NOT NULL);
 CREATE TABLE vehicle_ownership (vehicle_id TEXT PRIMARY KEY REFERENCES vehicle, owner_kind TEXT NOT NULL,
   owner_id TEXT, since_txn TEXT, since_mt INTEGER NOT NULL, owner_count INTEGER NOT NULL CHECK (owner_count BETWEEN 0 AND 99));

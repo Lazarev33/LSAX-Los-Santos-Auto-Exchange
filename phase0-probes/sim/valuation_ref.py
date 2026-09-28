@@ -148,7 +148,7 @@ def value(v: Vehicle):
     lines.append(("FMV", fmv, f"raw={fmv_raw} globalBand=[{lo_g},{hi_g}] floor={floor} ceiling={ceiling} rounded"))
 
     liq_spread = interp(DEALER_SPREAD_BY_LIQ, v.liquidity_bp) + (DEALER_POOR_COND_EXTRA if c < 400 else 0)
-    legal = v.provenance in ("CLEAN_TITLE", "SALVAGE_TITLE", "RECOVERED", "LEGACY_OWNED")
+    legal = v.provenance in ("CLEAN_TITLE", "SALVAGE_TITLE", "RECOVERED")          # no LEGACY title (D-PROV-1); UNKNOWN never legal
     out = {"label": v.label, "model": v.model, "msrp": v.msrp, "BUV": buv, "CAV": cav, "AV": av, "FMV": fmv, "C": c,
            "legal_eligible": legal,
            "dealer_acquisition": round_money(mul_bp(fmv, BP - liq_spread)) if legal else None,

@@ -69,7 +69,7 @@ normative for their domains.
 | Reservation | Exclusive claim of a vehicle/listing/offer by one transaction |
 | Stop marker | Last-tick values flushed in `Aborted` (never read from game state there) |
 | Timeline | Branch of LSAX history; forks at every anchoring |
-| Title | Legal standing: CLEAN, SALVAGE, STOLEN, RECOVERED, UNDERGROUND, UNKNOWN, LEGACY |
+| Title | Legal standing: CLEAN, SALVAGE, STOLEN, RECOVERED, UNDERGROUND, UNKNOWN (no LEGACY title; D-PROV-1) |
 | VehicleId | 128-bit LSAX identity of a specific vehicle |
 | VH / PH | Vehicle Heat / Player (protagonist) Heat, 0…1000 |
 
@@ -191,7 +191,8 @@ Per segment (valuation class), updated at each market step (every 60 MT min), in
 - Listings: DRAFT → ACTIVE (listing fee charged by `LISTING_CREATE`) → RESERVED/SOLD/EXPIRED (MT, default 7 MT days)/
   WITHDRAWN/INVALIDATED; one ACTIVE listing per vehicle; `version` increments on every change; `state_hash` binds
   offers to the vehicle state.
-- Eligibility: title ∈ {CLEAN, SALVAGE (disclosed), RECOVERED (disclosed), LEGACY}; UNKNOWN requires title verification.
+- Eligibility: title ∈ {CLEAN, SALVAGE (disclosed), RECOVERED (disclosed)}; UNKNOWN is never eligible (no title
+  verification exists; first-run imports are UNKNOWN unless LEGACY_TRUSTED, which is empty — D-PROV-1).
 - Search/filter backend: by segment, make/model, price, age, mileage, condition band, title, owners, accidents, distance;
   deterministic sort; paged (≤ 50 per page); purely Core (UI-independent).
 - Offers/counter-offers per VALUATION §6.1 and §15; offer expiry in MT; stale offers invalidated on state-hash change.
@@ -244,7 +245,7 @@ backup; startup integrity and rebuild; growth bounds; native SQLite preload (R-D
 - **Seller payment:** credited in the same tick as the ownership transfer.
 - **Fees (sinks):** listing fee = clamp(0.5 % × ask, $100, $2 500), non-refundable unless LSAX cancels (system
   INVALIDATED → `REFUND`); sale commission (player sells legally) = clamp(3 % × TP, $200, $25 000); transfer tax (player
-  buys legally) = clamp(1 % × TP, $50, $10 000); title verification = $500 + 1 % FMV, ≤ $5 000.
+  buys legally) = clamp(1 % × TP, $50, $10 000).
 - **Cancellation/refund:** pre-commit cancellation moves no money; commits are final; the only refund is the `REFUND`
   compensation of a failed LSAX delivery or a system cancellation (idempotent key `REFUND|txn`).
 - **Dealer spread:** 18–30 % (+5 % if C < 400), VALUATION §6.1. **Underground:** haircut + velocity surcharge (Heat §5).
@@ -284,7 +285,7 @@ analyzer LSAX001 and parity tests.
 - **Mail:** persistent, timeline-coupled rows (template key + params, MT + GC display stamp), per protagonist inbox,
   read/archived flags, retention 500 per protagonist (older archived then compacted). Created **only after commit**
   (never for rolled-back work). Triggers: offer received/countered/expired, sale/purchase completed, listing expired,
-  delivery status, reconcile required, underground contact, title verification result.
+  delivery status, reconcile required, underground contact.
 - **Notifications:** transient, in-memory queue ≤ 32, ≤ 1 shown per 3 s, never block input, never persisted; carry a
   `MessageRef`; a notification may reference a mail item.
 - Both go through `ILocalizer`; switching locale re-renders mail.
@@ -307,7 +308,7 @@ Lively World, Unified Shadow Logger, Crime Jobs, LSAX; entity-conflict rules; fo
 | AX-2 | replayed commit | idempotency on the active path (TX-I2) |
 | AX-3 | double payment / double sale | reservations + wallet verify-before-apply (TX-I3/I4) |
 | AX-4 | save/load/reload/crash mid-deal | anchoring + evidence-only recovery; RECONCILE otherwise (TX-I7) |
-| AX-5 | stolen → legal bypass | no title path from STOLEN/UNDERGROUND to CLEAN; plate swap/respray never change title; title verification fails on STOLEN match |
+| AX-5 | stolen → legal bypass | no title path from UNKNOWN/STOLEN/UNDERGROUND to CLEAN; plate swap/respray never change title; first-run import never yields CLEAN without a probe-proven LEGACY_TRUSTED rule (D-PROV-1) |
 | AX-6 | trainer mutation | odometer/wear LSAX-owned; native repair doesn't reset wear; mutations while Dormant lower identity confidence (refusal) |
 | AX-7 | sold-vehicle respawn | `GAME_RESPAWN_OF_SOLD` → not registrable/sellable |
 | AX-8 | destroyed-vehicle sale | lifecycle DESTROYED/RETIRED not listable/sellable; listings INVALIDATED |

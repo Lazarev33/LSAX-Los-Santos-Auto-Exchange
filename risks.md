@@ -34,3 +34,4 @@ closure type (OFFLINE / RUNTIME) is `spec/LSAX-RISK-REGISTER.md` (same IDs). Upd
 | R-L10N-1 | P2 | ASSUMPTION A-L10N-1 | GTA font glyph coverage for NBSP/typographic characters unknown. | ASCII-safe formatting until UI-S1. |
 | R-ODO-1 | P2 | OPEN RISK | Teleport vs legitimate fast transport (cargobob, trailer) misclassified. | Attachment check + speed consistency; T-ODO-2/6. |
 | R-TX-1 | P2 | DESIGN CONSTRAINT | No transaction recovery uses wallet evidence (D-TX-4). | Money-neutral and system transactions carry no game-side effects (pure DB, single commit, TSM §3a). |
+| R-PROV-1 | P2 | ACCEPTED COST | Legitimately owned pre-LSAX vehicles are UNKNOWN (underground channels only) because no ownership signal is proven (D-PROV-1). | LEGACY_TRUSTED rule may be added only after P-ID-01 proves an unspoofable marker + independent review; owner decides OD-4/OD-5 UX. |

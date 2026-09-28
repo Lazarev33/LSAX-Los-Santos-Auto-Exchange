@@ -42,7 +42,6 @@ proof (D-TX-4, D-TX-5).
 | `LISTING_WITHDRAW` | refund only if system-cancelled | — | — | listing WITHDRAWN |
 | `UG_SELL` (fence/chop/export/collector) | + underground value | protagonist → Underground party | lifecycle RETIRED (chop/export) or stays | — ; Heat events |
 | `UG_BUY` | − price | Underground → protagonist | title UNDERGROUND | — ; Heat events |
-| `TITLE_VERIFY` | − fee | — | title UNKNOWN → CLEAN or STOLEN | — |
 | `SERVICE_PAY` (LSAX service/rebuild) | − cost | — | condition/history | — |
 | `REFUND` (compensation) | + amount of a named committed txn | reverse of named txn | reverse where defined | reverse where defined |
 | `REGISTER_VEHICLE`, `OFFER_CREATE`, `OFFER_COUNTER` | none | none / — | registration | offer rows |
@@ -157,7 +156,7 @@ Common: acting party wallet defined; `wallet ≥ total debit`; subject rows exis
 reservation held by another txn; identity of any involved world vehicle currently **Bound** with confidence ≥ 85
 (never Ambiguous); vehicle lifecycle ∈ {ACTIVE, DORMANT, VIRTUAL} as required; not a mission/script-owned vehicle;
 not `GAME_RESPAWN_OF_SOLD` / `CLONE_SUSPECT`.
-Legal market: title ∈ {CLEAN, SALVAGE, RECOVERED, LEGACY}; listing `ACTIVE`, `listing.version` = expected;
+Legal market: title ∈ {CLEAN, SALVAGE, RECOVERED} (never UNKNOWN, D-PROV-1); listing `ACTIVE`, `listing.version` = expected;
 offer `ACTIVE`, `offer.version` = expected, `offer.expires_mt > MT_now`; buyer budget ≥ price.
 Seller side: seller owns the vehicle; vehicle state hash (odometer bucket, condition bucket, mods hash) equals the
 hash the offer was made against, else the offer is `STALE` (buyer must re-evaluate).
