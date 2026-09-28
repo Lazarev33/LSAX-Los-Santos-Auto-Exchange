@@ -82,7 +82,7 @@ feasibility.md and continue from the first item not marked [x]. Do not restart P
       [x] LSAX-MASTER-SPEC-v1.0.md (sections 00-30 + appendices, SPEC_APPROVED checklist)
 - [x] P0-07 Self-audit / consistency pass
       Mechanical: phase0-probes/tools/xref_check.py (IDs defined, paths exist, risk sets equal, sections 00-30,
-      appendices A-L). First run: 32 problems (7 decision IDs, 8 assumption IDs, T-ARCH-1, UI-S1, S-SL-1 undefined +
+      appendices A-L). First run: 32 problems (7 decision IDs, 8 assumption IDs, T-ARCH-1, UI-S1 and one stray probe label undefined +
       checker range handling) -> fixed (decisions.md architecture block, RISK-REGISTER §4 assumption register,
       TEST-STRATEGY rows) -> PASS (230 IDs).
       Semantic: fixed R-TIME-1 cap wording; added T-COND-1 calibration (runtime wear vs generation wear mismatch
