@@ -1,0 +1,16 @@
+A crash C1
+A reconcile 0
+A active_ids ['t1']
+A projection ['v1']
+A gta_applied []
+A gta_garage []
+A safety_match False
+A stats {'anchored_continuation': 2, 'roll_forward': 1}
+B reconcile 0
+B active_ids ['t1']
+B projection ['v1']
+B gta_applied []
+B gta_garage []
+B cash 200000
+B safety_match False
+B stats {'anchored_continuation': 1, 'anchored_slot': 1}

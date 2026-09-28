@@ -121,10 +121,25 @@ the audited branch `claude/focused-thompson-ilnspm`, DRAFT1 files, PR #1 or `mai
 
 ## C0 checklist
 - [x] C0-01 Verify audited baseline and create correction branch
-- [ ] C0-02 Read full independent audit bundle
-- [ ] C0-03 Reproduce/source-verify every finding
-- [ ] C0-04 Correct P0-02 transaction recovery
-- [ ] C0-05 Correct P0-03 save lineage
+- [x] C0-02 Read full independent audit bundle
+      Bundle files (SHA256SUMS.txt 4/4 OK): LSAX-PHASE0-INDEPENDENT-AUDIT.md, repro_findings.py, REPRO-OUTPUT.txt,
+      AUDIT-EVIDENCE.txt. Auditor could not finish the full 800-episode journal rerun (container timeout) -> DRAFT2
+      must provide a fast mode and report run time.
+- [x] C0-03 Reproduce/source-verify every finding (results in ledger below; all 11 confirmed, 0 disproven;
+      2 related defects self-found: continuation accepted on P/W correlation; UNKNOWN→CLEAN via title verification)
+- [x] C0-04 Correct P0-02 transaction recovery
+      D-TX-4/D-TX-5: own-evidence recovery (durable APPLYING at PREPARE, in-memory status flushed in Aborted),
+      roll-forward only with session token + own APPLIED; COMMIT-failure compensation / FAULT. Files: sim
+      journal_timeline_ref.py (rewritten), spec TSM §1/§4/§7/§10, SAVELOAD §4.4. Regressions:
+      regress/regress_audit_repro.py (auditor script byte-identical: 7/7 PASS),
+      regress/regress_p0_02_txn_recovery.py (432 scenarios, 2304/2304 PASS).
+- [x] C0-05 Correct P0-03 save lineage
+      D-SL-13..17: content-hash ledger + save-event corroboration, session-token continuation, hypothesis exclusion
+      (correlation only excludes), LIVE/NEW_GAME/PRE_INSTALL/MISSED_START, poll brackets. STANDARD/STRICT split
+      rejected (STANDARD = correlation acceptance). Files: sim journal_timeline_ref.py, spec SAVELOAD (rewritten),
+      decisions.md. Regressions: regress/regress_p0_03_save_lineage.py (23 cases, 73/73 PASS; residual R-SL-7
+      demo reproduces). Random sim default run: 0 safety failures, full path coverage, 50 s; realistic RECONCILE
+      15.2-16.7 % (R-SL-3 OPEN).
 - [ ] C0-06 Remove P0-04 Stage-1a exception
 - [ ] C0-07 Correct P1-01/P1-02 identity safety
 - [ ] C0-08 Correct P1-03 time model
@@ -141,4 +156,17 @@ the audited branch `claude/focused-thompson-ilnspm`, DRAFT1 files, PR #1 or `mai
 - [ ] C0-19 Report final status
 
 ## Finding ledger (verification → correction → regression → closure)
-(filled per finding below)
+
+| Finding | Verification (C0-03) | Status |
+|---|---|---|
+| P0-01 | SOURCE VERIFIED: SAVELOAD §0/§6, MASTER App. L; B-01 open, no runtime here | open (runtime) |
+| P0-02 | REPRODUCED: auditor repro_findings.py (ROOT path only changed) against baseline sim (sources == f6aff47) → output byte-identical to auditor REPRO-OUTPUT.txt (A: roll_forward on C1 + external cash == wallet_after). Root cause: sim `anchor()` continuation branch treats `cash == a and a != b` as APPLIED; TSM §7 row 1 normative. Why the 800-episode sim missed it: EXT changes only during OFFLINE windows, rarely landing exactly on wallet_after. | CORRECTED (C0-04): D-TX-4/5; regress_audit_repro A → RECONCILE(PENDING_UNKNOWN); regress_p0_02 2304/2304 PASS |
+| P0-03 | REPRODUCED: same run, case B byte-identical. Root cause: changed-while-down files become INFERRED ghost entries matched by P-window only (SAVELOAD §4.2/§4.3; sim `mk_ghost`). R-SL-4 covered only running-time copies. Additional (self-found): continuation itself is accepted on P/W correlation (same process) — a foreign save loaded without process restart could also pass the continuation test. | CORRECTED (C0-05): D-SL-13..17; regress_audit_repro B → RECONCILE(UNTRUSTED_PRESENT); regress_p0_03 73/73 PASS; residual R-SL-7 (TM-1) documented |
+| P0-04 | SOURCE VERIFIED: MASTER §28 L345, §30 L378, App. L L432-433; STAGE-ACCEPTANCE L19/34/39; RISK-REGISTER rows B-01, R-SL-2/3/4, R-DB-1, R-COMP-2, R-ENV-1, R-ID-1, R-UI-1, R-COMP-1, OD-3, OD-5, A-SL-4 reference S1a/S1b | verified |
+| P1-01 | SOURCE VERIFIED: DOMAIN §4.2 L95-102 ("can never inherit"), C11 L161; mutation-while-bound accepts plate/colour change under handle+model+time+position continuity | verified |
+| P1-02 | SOURCE VERIFIED: DOMAIN §4.4 L125-128 "bounded to ≤ 32 candidates … nearest last-seen first" before uniqueness gap test | verified |
+| P1-03 | SOURCE VERIFIED: TIME L45-46 (MT(P) reconstruction from PT + accepted skip-credit loss) vs L57 (PT "only" anchoring); MASTER App. L L419 | verified |
+| P1-04 | SOURCE VERIFIED: DB-SCHEMA L48 `journal_event.txn_id NOT NULL REFERENCES txn`; L118 event types incl. OdometerCheckpoint/MarketStep/MtCheckpoint/HeatDelta; TSM §3 has no system kind | verified |
+| P1-05 | SOURCE VERIFIED: NPC-GEN L17 and DOMAIN L69 `(campaign_seed, market_day, segment, slot)`; MASTER §11 market step every 60 MT min (24 steps/day); slot scope undefined. REPRODUCED with baseline `npcgen_ref.generate` + `derive_seed("vehicle",…)`: two steps of MT day 42 with step-local slots 0..2 → 3/3 identical VehicleIds and byte-identical vehicles. Also observed: raw FNV-1a ids differ only in a few hex digits (weak avalanche) → correction uses a mixing finaliser | reproduced |
+| P1-06 | SOURCE VERIFIED: DOMAIN L191 LEGACY "treated as CLEAN / eligible", L203; TSM L104; MASTER L190. Additional (self-found): DOMAIN title diagram `UNKNOWN --> CLEAN: title verification passed` — verification only checks STOLEN records, so a pre-LSAX/unobserved theft also launders | verified |
+| P2-01 | SOURCE VERIFIED: DB-SCHEMA L127 "online backup API … (projection tables only)"; the backup API copies a whole database (schema), not tables | verified |
