@@ -92,8 +92,12 @@ feasibility.md and continue from the first item not marked [x]. Do not restart P
 - [x] P0-08 SHA-256 manifest + LSAX-MASTER-SPEC-v1.0-DRAFT1.zip
       Built by phase0-probes/tools/package.py -> release/LSAX-MASTER-SPEC-v1.0-DRAFT1.zip (+ .zip.sha256);
       MANIFEST.sha256 inside covers every packaged file (git-tracked files only; bin/obj never packaged).
-- [ ] P0-09 Commit + push to claude/focused-thompson-ilnspm — performed after packaging; the repository copy
+- [x] P0-09 Commit + push to claude/focused-thompson-ilnspm — performed after packaging; the repository copy
       of this file (not the archived copy) records the push result.
+      Pushed 6118472 (release commit); `git ls-remote` head == local HEAD. Archive in repo:
+      release/LSAX-MASTER-SPEC-v1.0-DRAFT1.zip, SHA-256 281f52f6e989ed7de93d4af7d61e25e9a2369fa7d74856f5d666357896cccd16
+      (two builds byte-identical; extracted copy: manifest 55/55 OK, xref PASS, sims regenerate identical evidence).
+      Note: the archived progress.md shows P0-09 open because it was snapshotted before this push.
 
 ## Final state for the reviewer
 - SPEC_APPROVED is NOT self-granted. Gate item "save/load persistence model proven feasible" = FAIL (BLOCKER B-01).
