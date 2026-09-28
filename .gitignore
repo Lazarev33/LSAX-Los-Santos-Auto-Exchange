@@ -5,3 +5,4 @@ obj/
 __pycache__/
 *.pyc
 phase0-probes/sim/valuation_vectors.json
+MANIFEST.sha256
