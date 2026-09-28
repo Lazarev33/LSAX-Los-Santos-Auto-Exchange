@@ -45,10 +45,52 @@ proof (D-TX-4, D-TX-5).
 | `TITLE_VERIFY` | − fee | — | title UNKNOWN → CLEAN or STOLEN | — |
 | `SERVICE_PAY` (LSAX service/rebuild) | − cost | — | condition/history | — |
 | `REFUND` (compensation) | + amount of a named committed txn | reverse of named txn | reverse where defined | reverse where defined |
-| `REGISTER_VEHICLE`, `OFFER_CREATE`, `OFFER_COUNTER`, `OFFER_EXPIRE` | none | none / — | registration | offer rows |
+| `REGISTER_VEHICLE`, `OFFER_CREATE`, `OFFER_COUNTER` | none | none / — | registration | offer rows |
 
 Money-neutral kinds cannot use the wallet as recovery evidence; they carry **no game-side effect** by design, so
 they are pure DB transactions (crash → either committed or not, no ambiguity).
+
+## 3a. System transactions (normative, D-JRN-1; audit P1-04)
+
+Every durable change of timeline-coupled state is a transaction — including periodic and observed changes that have
+no player intent. System transactions have **no game-side effect**, so they need no PREPARE: they are a single
+durable commit through the **same path** as business transactions.
+
+| Kind | Trigger | Deterministic idempotency key | Payload (absolute resulting values) | Coalescible |
+|---|---|---|---|---|
+| `SYS_MT_CHECKPOINT` | every 60 s AT; immediately at every skip credit (TIME §2.2) | `SYS_MT\|<session_token>\|<seq in session>` | MT state `(mt, base_mt, recent_credits)` | yes (newest wins) |
+| `SYS_ODO_CHECKPOINT` | ≥ 1 km or ≥ 60 s driving; lifecycle checkpoints (MASTER §07) | `SYS_ODO\|<vehicle_id>\|<session_token>\|<seq>` | `odo_m`, condition vector | yes (per vehicle, newest wins) |
+| `SYS_MARKET_STEP` | MT crosses a 60-MT-min boundary (step index = ⌊MT/60⌋); catch-up after anchoring | `SYS_MKT\|<campaign>\|<market_step_index>` | segment indices after the step, generated vehicles (NPC-GEN §2), listing changes | **no** |
+| `SYS_HEAT_DECAY` | MT hour boundary (hour index) | `SYS_HEATDECAY\|<campaign>\|<mt_hour_index>` | Heat values after decay | **no** |
+| `SYS_HEAT_EVENT` | an observed Heat cause (theft, witnessed crime …) | `SYS_HEAT\|<cause kind>\|<cause id>\|<mt_min>` | Heat values after the event | **no** |
+| `SYS_LISTING_EXPIRY` | listing/offer `expires_mt ≤ MT_now` at a market step | `SYS_EXPIRE\|<listing or offer id>\|<version>` | new state `EXPIRED` + version | **no** |
+
+Protocol (all normative):
+
+1. **Identity:** `txn_id` random 128-bit (like business); the **idempotency key** above is the logical identity.
+   The same key may exist on different branches (a rewound world re-issues it); on one path it commits at most once.
+2. **Single commit:** one SQLite transaction inserts the `txn` row (`state=COMMITTED`, `apply_status=APPLIED`),
+   the `commit_log` row (next `seq` of the active timeline — the same sequence as business commits), 1..n
+   `journal_event` rows (`journal_event.txn_id` → this txn), the projection updates and the `applied_idem` row.
+3. **Duplicate suppression:** inside that SQLite transaction, a key already in the projection's `applied_idem`
+   (PRIMARY KEY; exactly the active path's keys, rebuilt with the projection) → rollback, result `DUPLICATE`.
+4. **Ordering:** commits are serialised by the single DB writer in main-thread issue order; a system transaction
+   is never committed while a business transaction is PREPARED (it waits for that tick's COMMIT/ABORT).
+   Catch-up (after anchoring or downtime) issues due market steps / decay hours in ascending index order.
+5. **Retry:** an I/O failure rolls back; the same key is retried (≤ 3 times, then the job is re-derived at the next
+   trigger — the deterministic key makes the retry exact). A retry after a lost acknowledgement returns `DUPLICATE`.
+6. **Crash:** before commit → nothing durable; the event is re-derived at the next trigger (market step, decay
+   hour, expiry: from MT and the path state; checkpoints: superseded by the next one — bounded loss: ≤ 30 MT min
+   base MT, ≤ 1 km odometer, never a skip credit). After commit → durable and deduplicated.
+7. **Replay:** the projection is rebuilt by replaying `journal_event` rows of the active path in `(timeline, seq,
+   ord)` order; payloads carry absolute values (deltas only as audit fields) so replay and double replay are exact.
+8. **Branches:** after anchoring to an earlier state, events are re-derived from `(campaign_seed, index, path
+   state)` → identical key and payload (no re-roll exploit); the abandoned branch keeps its own copy for audit.
+9. **Coalescing:** only `SYS_MT_CHECKPOINT` and `SYS_ODO_CHECKPOINT` may be coalesced while queued (newest absolute
+   value supersedes); every other kind is committed individually, never merged or dropped.
+
+Verified by `phase0-probes/regress/regress_p1_04_sysjournal.py` (each family: crash before commit, lost ack, rebuild,
+double replay, branch regeneration, ordering gate, coalescing rule; plus market-step catch-up after rewind).
 
 ## 4. Single-tick atomic core (normative, D-TX-1)
 

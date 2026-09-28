@@ -163,7 +163,12 @@ the audited branch `claude/focused-thompson-ilnspm`, DRAFT1 files, PR #1 or `mai
       TIME-MODEL (header, §1, §2.2, §2.3, §3, §4, §5), MASTER §06/§07, SAVELOAD §4.2, DB-SCHEMA save_ledger MT state,
       decisions D-TIME-2. Regression regress/regress_p1_03_time.py 21/21 PASS (DRAFT1 MT(P) defect reproduced in T7
       and T8).
-- [ ] C0-09 Correct P1-04 system journal protocol
+- [x] C0-09 Correct P1-04 system journal protocol
+      D-JRN-1: TSM §3a (6 SYS_* kinds, deterministic keys, single commit through txn -> commit_log -> journal_event,
+      active-path duplicate suppression via applied_idem PK, ordering gate vs PREPARED, retry, crash, replay, branch
+      regeneration, coalescing only for MT/ODO checkpoints). OFFER_EXPIRE folded into SYS_LISTING_EXPIRY. Files:
+      sim/sysjournal_ref.py (new), TSM §3/§3a, DB-SCHEMA (commit_log.kind, applied_idem, §4 event->kind table),
+      TEST-STRATEGY T-TX-5/T-TX-4b, MASTER §07. Regression regress/regress_p1_04_sysjournal.py 68/68 PASS.
 - [ ] C0-10 Correct P1-05 NPC generation identity
 - [ ] C0-11 Correct P1-06 LEGACY provenance
 - [ ] C0-12 Correct P2-01 backup architecture
@@ -186,7 +191,7 @@ the audited branch `claude/focused-thompson-ilnspm`, DRAFT1 files, PR #1 or `mai
 | P1-01 | SOURCE VERIFIED: DOMAIN §4.2 L95-102 ("can never inherit"), C11 L161; mutation-while-bound accepts plate/colour change under handle+model+time+position continuity | CORRECTED (C0-07): D-ID-6/D-ID-8; regress_p1_01_02 H1–H8 PASS |
 | P1-02 | SOURCE VERIFIED: DOMAIN §4.4 L125-128 "bounded to ≤ 32 candidates … nearest last-seen first" before uniqueness gap test | CORRECTED (C0-07): D-ID-7 lossless K1/K2; regress_p1_01_02 C1–C6 PASS |
 | P1-03 | SOURCE VERIFIED: TIME L45-46 (MT(P) reconstruction from PT + accepted skip-credit loss) vs L57 (PT "only" anchoring); MASTER App. L L419 | CORRECTED (C0-08): D-TIME-2; regress_p1_03_time 21/21 PASS |
-| P1-04 | SOURCE VERIFIED: DB-SCHEMA L48 `journal_event.txn_id NOT NULL REFERENCES txn`; L118 event types incl. OdometerCheckpoint/MarketStep/MtCheckpoint/HeatDelta; TSM §3 has no system kind | verified |
+| P1-04 | SOURCE VERIFIED: DB-SCHEMA L48 `journal_event.txn_id NOT NULL REFERENCES txn`; L118 event types incl. OdometerCheckpoint/MarketStep/MtCheckpoint/HeatDelta; TSM §3 has no system kind | CORRECTED (C0-09): D-JRN-1, TSM §3a; regress_p1_04_sysjournal 68/68 PASS |
 | P1-05 | SOURCE VERIFIED: NPC-GEN L17 and DOMAIN L69 `(campaign_seed, market_day, segment, slot)`; MASTER §11 market step every 60 MT min (24 steps/day); slot scope undefined. REPRODUCED with baseline `npcgen_ref.generate` + `derive_seed("vehicle",…)`: two steps of MT day 42 with step-local slots 0..2 → 3/3 identical VehicleIds and byte-identical vehicles. Also observed: raw FNV-1a ids differ only in a few hex digits (weak avalanche) → correction uses a mixing finaliser | reproduced |
 | P1-06 | SOURCE VERIFIED: DOMAIN L191 LEGACY "treated as CLEAN / eligible", L203; TSM L104; MASTER L190. Additional (self-found): DOMAIN title diagram `UNKNOWN --> CLEAN: title verification passed` — verification only checks STOLEN records, so a pre-LSAX/unobserved theft also launders | verified |
 | P2-01 | SOURCE VERIFIED: DB-SCHEMA L127 "online backup API … (projection tables only)"; the backup API copies a whole database (schema), not tables | verified |

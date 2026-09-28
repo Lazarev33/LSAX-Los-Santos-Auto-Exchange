@@ -46,10 +46,11 @@ CREATE TABLE txn (txn_id TEXT PRIMARY KEY, idem_key TEXT NOT NULL, kind TEXT NOT
   resolution TEXT CHECK (resolution IN ('COMMITTED_IN_TICK','ABORTED_IN_TICK','COMPENSATED','OWN_EVIDENCE_ROLL_FORWARD',
     'OWN_EVIDENCE_ABORT','ANCHORED_TO_EARLIER_SAVE','PLAYER_CHOICE')));
 CREATE TABLE commit_log (timeline_id INTEGER NOT NULL REFERENCES timeline, seq INTEGER NOT NULL,
-  txn_id TEXT NOT NULL UNIQUE REFERENCES txn, idem_key TEXT NOT NULL, p_ms INTEGER NOT NULL, mt INTEGER NOT NULL,
+  txn_id TEXT NOT NULL UNIQUE REFERENCES txn, idem_key TEXT NOT NULL, kind TEXT NOT NULL, p_ms INTEGER NOT NULL, mt INTEGER NOT NULL,
   wallet_before INTEGER, wallet_after INTEGER, PRIMARY KEY (timeline_id, seq));
 CREATE TABLE journal_event (txn_id TEXT NOT NULL REFERENCES txn, ord INTEGER NOT NULL, type TEXT NOT NULL,
   schema_v INTEGER NOT NULL, payload_json TEXT NOT NULL, PRIMARY KEY (txn_id, ord));
+  -- every event belongs to exactly one business or system txn (TSM §3a); system txns: kind LIKE 'SYS_%'
 CREATE TABLE reservation (subject TEXT PRIMARY KEY, txn_id TEXT NOT NULL REFERENCES txn);  -- 'veh:<id>' | 'lst:<id>' | 'off:<id>'
 -- save ledger (global, never rewinds; SAVELOAD §4.1/§4.2): positive knowledge of save CONTENT only
 CREATE TABLE save_ledger (sha256 TEXT PRIMARY KEY, kind TEXT NOT NULL CHECK (kind IN ('OBSERVED','PRE_INSTALL')),
@@ -71,6 +72,7 @@ CREATE TABLE deal (deal_id TEXT PRIMARY KEY, state TEXT NOT NULL, listing_id TEX
 
 -- ===== projection (derived; rebuilt per active path) =====
 CREATE TABLE projection_meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);           -- head_txn, timeline_id, rebuilt_wall
+CREATE TABLE applied_idem (idem_key TEXT PRIMARY KEY, txn_id TEXT NOT NULL);         -- active-path idempotency set (TSM §3a)
 CREATE TABLE vehicle (vehicle_id TEXT PRIMARY KEY, lsax_vin TEXT NOT NULL UNIQUE, model_hash INTEGER NOT NULL,
   model_name TEXT, birth_mt INTEGER NOT NULL,
   lifecycle TEXT NOT NULL CHECK (lifecycle IN ('VIRTUAL','ACTIVE','DORMANT','MISSING','DESTROYED','RETIRED','MODEL_UNAVAILABLE')),
@@ -130,11 +132,21 @@ Mail content is stored as **template key + parameters**, never as rendered text,
 
 ## 4. Journal events
 
-`journal_event.payload_json` is canonical JSON (UTF-8, sorted keys, integers only, no floats). Types (schema_v=1):
-`VehicleRegistered, TitleChanged, OwnershipChanged, OdometerCheckpoint, ConditionChanged, ModsChanged,
-HistoryAppended, ListingOpened, ListingStateChanged, OfferCreated, OfferStateChanged, DealStateChanged,
-WalletDelta, FeeCharged, HeatDelta, MarketStep(segment, seed, indices), MtCheckpoint(p, mt), MailQueued`.
-Replaying events of a path in order reproduces the projection bit-for-bit (T-DB-3).
+`journal_event.payload_json` is canonical JSON (UTF-8, sorted keys, integers only, no floats). Every event belongs to
+exactly one transaction — business (TSM §3) or system (TSM §3a). Types (schema_v=1) and the transaction kinds that
+emit them:
+
+| Event type | Emitted by | Payload (absolute values; deltas only as audit fields) |
+|---|---|---|
+| `VehicleRegistered`, `TitleChanged`, `OwnershipChanged`, `HistoryAppended`, `ModsChanged`, `WalletDelta`, `FeeCharged`, `ListingOpened`, `ListingStateChanged`, `OfferCreated`, `OfferStateChanged`, `DealStateChanged`, `MailQueued` | business transactions | resulting row values |
+| `MtCheckpoint(state)` | `SYS_MT_CHECKPOINT` | MT state `(mt, base_mt, recent_credits)` |
+| `OdometerCheckpoint`, `ConditionChanged` | `SYS_ODO_CHECKPOINT` | `odo_m`, condition vector |
+| `MarketStep(step, indices, generated)` | `SYS_MARKET_STEP` | segment indices after the step; generated vehicle rows (NPC-GEN §2) |
+| `HeatDelta(values)` | `SYS_HEAT_DECAY`, `SYS_HEAT_EVENT`, underground business transactions | Heat values after the change |
+| `ListingStateChanged(EXPIRED)` | `SYS_LISTING_EXPIRY` | new state + version |
+
+Replaying events of a path in `(timeline, seq, ord)` order reproduces the projection bit-for-bit (T-DB-3); replaying
+twice gives the same result.
 
 ## 5. Snapshots and rebuild
 
