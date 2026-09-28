@@ -140,7 +140,11 @@ the audited branch `claude/focused-thompson-ilnspm`, DRAFT1 files, PR #1 or `mai
       decisions.md. Regressions: regress/regress_p0_03_save_lineage.py (23 cases, 73/73 PASS; residual R-SL-7
       demo reproduces). Random sim default run: 0 safety failures, full path coverage, 50 s; realistic RECONCILE
       15.2-16.7 % (R-SL-3 OPEN).
-- [ ] C0-06 Remove P0-04 Stage-1a exception
+- [x] C0-06 Remove P0-04 Stage-1a exception
+      D-GATE-1 applied: STAGE-ACCEPTANCE Phase-0 gate + single Stage 1 (entry SPEC_APPROVED), MASTER §28/§30/App. L,
+      RISK-REGISTER (gate semantics: every open P0/P1 blocks SPEC_APPROVED; closure OFFLINE/RUNTIME column),
+      risks.md, feasibility.md E7-3. Regression regress/regress_p0_04_gate.py 24/24 PASS (static scan; the same
+      scan finds 22 carve-out lines in the DRAFT1 baseline texts, 0 in DRAFT2).
 - [ ] C0-07 Correct P1-01/P1-02 identity safety
 - [ ] C0-08 Correct P1-03 time model
 - [ ] C0-09 Correct P1-04 system journal protocol
@@ -162,7 +166,7 @@ the audited branch `claude/focused-thompson-ilnspm`, DRAFT1 files, PR #1 or `mai
 | P0-01 | SOURCE VERIFIED: SAVELOAD §0/§6, MASTER App. L; B-01 open, no runtime here | open (runtime) |
 | P0-02 | REPRODUCED: auditor repro_findings.py (ROOT path only changed) against baseline sim (sources == f6aff47) → output byte-identical to auditor REPRO-OUTPUT.txt (A: roll_forward on C1 + external cash == wallet_after). Root cause: sim `anchor()` continuation branch treats `cash == a and a != b` as APPLIED; TSM §7 row 1 normative. Why the 800-episode sim missed it: EXT changes only during OFFLINE windows, rarely landing exactly on wallet_after. | CORRECTED (C0-04): D-TX-4/5; regress_audit_repro A → RECONCILE(PENDING_UNKNOWN); regress_p0_02 2304/2304 PASS |
 | P0-03 | REPRODUCED: same run, case B byte-identical. Root cause: changed-while-down files become INFERRED ghost entries matched by P-window only (SAVELOAD §4.2/§4.3; sim `mk_ghost`). R-SL-4 covered only running-time copies. Additional (self-found): continuation itself is accepted on P/W correlation (same process) — a foreign save loaded without process restart could also pass the continuation test. | CORRECTED (C0-05): D-SL-13..17; regress_audit_repro B → RECONCILE(UNTRUSTED_PRESENT); regress_p0_03 73/73 PASS; residual R-SL-7 (TM-1) documented |
-| P0-04 | SOURCE VERIFIED: MASTER §28 L345, §30 L378, App. L L432-433; STAGE-ACCEPTANCE L19/34/39; RISK-REGISTER rows B-01, R-SL-2/3/4, R-DB-1, R-COMP-2, R-ENV-1, R-ID-1, R-UI-1, R-COMP-1, OD-3, OD-5, A-SL-4 reference S1a/S1b | verified |
+| P0-04 | SOURCE VERIFIED: MASTER §28 L345, §30 L378, App. L L432-433; STAGE-ACCEPTANCE L19/34/39; RISK-REGISTER rows B-01, R-SL-2/3/4, R-DB-1, R-COMP-2, R-ENV-1, R-ID-1, R-UI-1, R-COMP-1, OD-3, OD-5, A-SL-4 reference S1a/S1b | CORRECTED (C0-06): D-GATE-1; regress_p0_04_gate 24/24 PASS |
 | P1-01 | SOURCE VERIFIED: DOMAIN §4.2 L95-102 ("can never inherit"), C11 L161; mutation-while-bound accepts plate/colour change under handle+model+time+position continuity | verified |
 | P1-02 | SOURCE VERIFIED: DOMAIN §4.4 L125-128 "bounded to ≤ 32 candidates … nearest last-seen first" before uniqueness gap test | verified |
 | P1-03 | SOURCE VERIFIED: TIME L45-46 (MT(P) reconstruction from PT + accepted skip-credit loss) vs L57 (PT "only" anchoring); MASTER App. L L419 | verified |

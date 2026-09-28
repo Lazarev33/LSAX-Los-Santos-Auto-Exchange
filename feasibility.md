@@ -94,7 +94,7 @@ Full output: `evidence/native_check.txt`, `evidence/save_natives_scan.txt`.
 |---|---|---|
 | E7-1 | `phase0-probes/shvdn/LsaxPhase0Probe` (net48, C# 7.3, `TreatWarningsAsErrors`): `SessionSignalProbe` (P-SL-01, passive), `AnchorCarrierProbe` (P-SL-02, opt-in stat writes behind consent phrase), `IdentityProbe` (P-ID-01, opt-in decorator). | VERIFIED (compile) against ScriptHookVDotNet3 **3.6.0** NuGet reference: `dotnet build -c Release` → Build succeeded, 0 warnings. References only mscorlib, SHVDN3 3.6.0, System, System.Core, System.Windows.Forms. 3.7-only `DecoratorInterface.IsLocked` is reached via reflection. |
 | E7-2 | `phase0-probes/shvdn/LsaxPhase0SqliteProbe` (P-DB-01, opt-in). | VERIFIED (compile). A Windows deployment build must set `RuntimeIdentifier=win-x64` (the Linux build copied only linux natives). |
-| E7-3 | None of the probes has been executed. Their outputs are the exact experiments required before Stage 1 (see LSAX-SAVELOAD-FEASIBILITY.md §6). | BLOCKER B-01 input |
+| E7-3 | None of the probes has been executed. Their outputs are the exact experiments required before SPEC_APPROVED (see LSAX-SAVELOAD-FEASIBILITY.md §6); no stage starts before SPEC_APPROVED (D-GATE-1). | BLOCKER B-01 input |
 
 ## E8 — Offline reference simulations (VERIFIED (sim))
 

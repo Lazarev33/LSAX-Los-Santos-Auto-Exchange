@@ -1,28 +1,32 @@
 # LSAX — Risk Register & Open Decisions
 
-Document: LSAX-RISK-REGISTER.md · Spec: LSAX MASTER SPEC v1.0 DRAFT1 · Status: DRAFT for independent audit
+Document: LSAX-RISK-REGISTER.md · Spec: LSAX MASTER SPEC v1.0 DRAFT2 · Status: DRAFT for independent re-audit
 
-Severity: **P0** blocks Stage 1 (or makes the architecture unsafe); **P1** must close before the stage that depends
-on it; **P2** tracked with mitigation. Owner "PO" = project owner (runs probes on the target PC); "S<n>" = stage team.
-IDs match `risks.md`.
+Severity: **P0** makes the architecture unsafe or unproven; **P1** is a material specification/feasibility gap;
+**P2** tracked with mitigation. **Gate (D-GATE-1, MASTER ROADMAP v3): every open P0 and P1 blocks SPEC_APPROVED, and no
+stage — or any part of a stage — starts before SPEC_APPROVED.** There is no Stage 1a/1b split and no stage-deferred
+P0/P1. Only disposable probes (`phase0-probes/`) and Phase-0 corrections are allowed while any P0/P1 is open.
+"Closure" column: OFFLINE = can be closed by offline proof; RUNTIME = needs target-runtime evidence (GTA V Legacy
+1.0.3725.0, SHVDN 3.7.x, full modpack) supplied by the project owner (PO). IDs match `risks.md`.
 
-## 1. Blockers and P1 risks
+## 1. Blockers and P1 risks (all block SPEC_APPROVED while open)
 
-| ID | Sev | Label | Risk | Trigger / evidence | Mitigation | Exit criterion | Owner | Due |
+| ID | Sev | Label | Risk | Trigger / evidence | Mitigation | Exit criterion | Closure | Status |
 |---|---|---|---|---|---|---|---|---|
-| B-01 | P0 | BLOCKER | Model D rests on A-SL-1/5/6/7 (load detectable, cash restored, persisted monotonic play-time stat, save-file writes observable) | no GTA runtime in Phase 0 | P-SL-01 ready (compile-verified); fallback table SAVELOAD §7 | P-SL-01 PC-1…PC-5 PASS 10/10 on full modpack | PO | before S1b |
-| R-SL-2 | P1 | OPEN RISK | no suitable play-time stat | PC-2 fails | F1 watermark stat (P-SL-02) or F2 coordinate + re-simulation | PC-2 pass, or F1/F2 chosen with sim re-run | PO + S1 | before S1b |
-| R-SL-3 | P1 | OPEN RISK | RECONCILE_REQUIRED too frequent for players | sim 2–3 % of anchorings under crash/load-heavy mix | conservative by design; measure real rate | 0 RECONCILE in P-SL-01 T1–T13 flows with S1b | S1 | S1b |
-| R-SL-4 | P1 | OPEN RISK | foreign/copied save files recorded as saves of the current world | user copies saves into profile folder while playing | correlate file change with save-event flags; else FOREIGN | P-SL-01 shows reliable save-event flags (or rule defined without them) | PO + S1 | S1b |
-| R-DB-1 | P1 | OPEN RISK | native SQLite fails to load in SHVDN shadow-copy domain | E6-4 IL evidence predicts default lookup failure | D-DB-3 explicit preload | P-DB-01 steps 1–3 PASS | PO | S1a |
-| R-DB-2 | P1 | OPEN RISK | 2 fsync'd commits per transaction tick too slow | slow disks | budget 25 ms p95; measure | T-PERF-8 / P-DB-01 p95 ≤ 10 ms, or redesign before S5 | PO + S5 | S5 |
-| R-COMP-2 | P1 | OPEN RISK | dependency DLL collisions (first `EndsWith` match wins) | another mod ships older System.Memory etc. | minimal deps under `scripts/LSAX/`; startup self-check → safe refusal | T-COMP-7 | S1a / S12 | S1a |
-| R-ENV-1 | P1 | ASSUMPTION A-ENV-1 | user's SHVDN 3.7.x differs from pinned source | nightly drift | P-SL-01 logs version; target 3.6.0 API subset; reflection for 3.7-only | version recorded and lifecycle behaviour matches E1 | PO | S1a |
-| R-ID-1 | P1 | OPEN RISK | identical vehicles not separable → temptation to merge | legacy cars with default plates | never auto-merge; LSAX plates; confirmation only with a single candidate | T-ID-1/2, T-RT-ID-1 | S1 | S1a |
-| R-ID-4 | P1 | OPEN RISK | story personal vehicles may be mission entities → excluded wrongly / or included wrongly | unknown `IS_ENTITY_A_MISSION_ENTITY`/population type for personal vehicles | P-ID-01 logs flags; rule refined | P-ID-01 run; rule updated in DOMAIN §4.6 | PO + S3 | S3 |
-| R-ECO-1 | P1 | OPEN RISK | other mods write cash (absolute set) near LSAX transactions | Crime Jobs payouts | verify-before-apply; abort | T-COMP-5 | S5 / S12 | S5 |
-| R-UI-1 | P1 | OPEN RISK | no renderer proven on Legacy + SHVDN 3.7 + modpack | none tested | UI-S1 spike with pass/fail (MASTER §20) | UI-S1 pass | S8 (spike can run in S1a) | S8 |
-| R-COMP-1 | P1 | ASSUMPTION | third-party mod behaviours (RDE, RealParamedics, Persist Corpses, Crime Scene Aftermath, Lively World, Unified Shadow Logger, Crime Jobs) assumed, not observed | mods unavailable in Phase 0 | conservative "never own" matrix + forbidden-native scan | T-COMP-2..6 | S12 (smoke in S1a) | S12 |
+| B-01 | P0 | BLOCKER | Model D rests on runtime assumptions A-SL-1, 4, 5, 6, 7, 8, 9, 10, 12, 13, 14 (SAVELOAD §9) | no GTA runtime in Phase 0 | P-SL-01 prepared (compile-verified, README-PROBES); fallback table SAVELOAD §7 degrades only toward refusal | P-SL-01 PC-1, PC-2, PC-3, PC-4, PC-5, PC-7, PC-8 PASS 10/10 on the target runtime, full modpack | RUNTIME (PO) | OPEN — BLOCKED_RUNTIME_VALIDATION |
+| R-SL-2 | P1 | OPEN RISK | no persisted play-time stat restored exactly on load | PC-2 fails | SAVELOAD §7 row PC-2 (wallet-only exclusion or refuse; re-simulate) | PC-2 pass, or fallback chosen and re-simulated | RUNTIME (PO) | OPEN |
+| R-SL-3 | P1 | OPEN RISK | RECONCILE_REQUIRED too frequent for players | DRAFT2 sim: realistic mix 15.2–16.7 % of non-first session starts (crash-heavy mix), adversarial 58–60 %; causes: in-transaction crashes, pre-install / unobserved files, forward loads in the same process | safety over convenience; explicit one-choice resolution UI; optimisation O-SL-1 only after runtime evidence | P-SL-01 logs replayed through the reference model: normal flows T1–T13 refuse only for documented causes; owner accepts the RECONCILE profile as a product decision | RUNTIME (PO) + owner decision | OPEN |
+| R-SL-4 | P1 | OPEN RISK | foreign/copied save files taken as lineage | DRAFT1 INFERRED windows (audit P0-03) | D-SL-13: only observed + event-corroborated or byte-identical content is lineage; everything else UNTRUSTED; regression P0-03 | design closed (73/73 regression PASS); runtime part = A-SL-12 (PC-4) under B-01 | OFFLINE ✔ / RUNTIME via B-01 | MITIGATED BY DESIGN; runtime under B-01 |
+| R-SL-7 | P1 | OPEN RISK | residual: forged save loaded and swapped back to trusted bytes before LSAX's scan, reproducing a trusted fingerprint | deliberate tampering outside TM-1 (SAVELOAD §4.9); regression P0-03/23 reproduces | documented threat model; A-SL-8 probed by PC-8 | owner accepts TM-1 boundary; PC-8 PASS | RUNTIME (PC-8) + owner decision | OPEN |
+| R-DB-1 | P1 | OPEN RISK | native SQLite fails to load in SHVDN shadow-copy domain | E6-4 IL evidence predicts default lookup failure | D-DB-3 explicit preload | P-DB-01 steps 1–3 PASS | RUNTIME (PO) | OPEN |
+| R-DB-2 | P1 | OPEN RISK | 2 fsync'd commits per transaction tick too slow | slow disks | budget 25 ms p95; measure | P-DB-01 commit p95 ≤ 10 ms on the target PC | RUNTIME (PO) | OPEN |
+| R-COMP-2 | P1 | OPEN RISK | dependency DLL collisions (first `EndsWith` match wins) | another mod ships older System.Memory etc. | minimal deps in their own folder; startup self-check → safe refusal | P-DB-01 on the full modpack resolves every dependency from its own folder (logged path + version) | RUNTIME (PO) | OPEN |
+| R-ENV-1 | P1 | ASSUMPTION A-ENV-1 | user's SHVDN 3.7.x differs from pinned source | nightly drift | P-SL-01 logs version; target 3.6.0 API subset; reflection for 3.7-only | version recorded and lifecycle behaviour matches E1 (PC-1, PC-5) | RUNTIME (PO) | OPEN |
+| R-ID-1 | P1 | OPEN RISK | identical vehicles not separable → temptation to merge | legacy cars with default plates | never auto-merge; lossless bounded search (D-ID-7); handle never identity (D-ID-6); LSAX plates | identity regressions (P1-01/P1-02) PASS: no automatic bind without unique ≥ 85 and gap ≥ 20 over the complete candidate set | OFFLINE | MITIGATED BY DESIGN (regression) |
+| R-ID-4 | P1 | OPEN RISK | story personal vehicles may be mission entities → excluded wrongly / or included wrongly; feeds LEGACY_TRUSTED (D-PROV-1) | unknown `IS_ENTITY_A_MISSION_ENTITY`/population type for personal vehicles | P-ID-01 logs flags; until then LEGACY_TRUSTED is empty and story vehicles are never sellable | P-ID-01 run; rule updated in DOMAIN §4.6/§5.3 | RUNTIME (PO) | OPEN |
+| R-ECO-1 | P1 | OPEN RISK | other mods write cash (absolute set) near LSAX transactions | Crime Jobs payouts | verify-before-apply; abort; wallets never recovery evidence (D-TX-4) | P-SL-01 PC-8 wallet-change log on the full modpack shows no change-and-restore between two ticks (A-SL-14) | RUNTIME (PO) | OPEN |
+| R-UI-1 | P1 | OPEN RISK | no renderer proven on Legacy + SHVDN 3.7 + modpack | none tested | UI-S1 feasibility spike (disposable probe) with pass/fail (MASTER §20) | UI-S1 pass on the target runtime | RUNTIME (PO) | OPEN |
+| R-COMP-1 | P1 | ASSUMPTION | third-party mod behaviours (RDE, RealParamedics, Persist Corpses, Crime Scene Aftermath, Lively World, Unified Shadow Logger, Crime Jobs) assumed, not observed | mods unavailable in Phase 0 | conservative "never own" matrix + forbidden-native scan | P-SL-01 / P-ID-01 full-modpack runs log no violation of the COMPATIBILITY §1 matrix | RUNTIME (PO) | OPEN |
 
 ## 2. P2 risks
 
@@ -48,9 +52,9 @@ IDs match `risks.md`.
 |---|---|---|---|---|
 | OD-1 | UI renderer | LemonUI (SHVDN3 build) / NativeUI / custom Scaleform / in-house text overlay | S8 (spike earlier) | UI-S1 results |
 | OD-2 | underground income target band | e.g. 0.6–1.2× legal flipping income per active hour | S9 | Stage 9 economy sim |
-| OD-3 | anchor fallback if PC-2 fails | F1 watermark stat vs F2 coordinate | S1b | P-SL-01/02 |
+| OD-3 | anchor fallback if PC-2 fails | wallet-only exclusion vs refuse-always (SAVELOAD §7); an in-save carrier only if P-SL-02 proves it | before SPEC_APPROVED | P-SL-01/02 |
 | OD-4 | story personal vehicle policy | sellable (with respawn block) vs never sellable | S3 | P-ID-01 |
-| OD-5 | legacy registration UX | opt-in wizard at first run vs on first entry | S1a/S3 | owner preference |
+| OD-5 | legacy registration UX (never changes provenance: import yields UNKNOWN unless LEGACY_TRUSTED, D-PROV-1) | opt-in wizard at first run vs on first entry | S3 | owner preference |
 | OD-6 | underground unlock content | contact mission design | S9 | owner preference |
 
 ## 4. Assumption register
@@ -61,7 +65,7 @@ IDs match `risks.md`.
 |---|---|---|---|
 | A-SL-1 | SP save load restarts the SHVDN script domain (new ScriptHookV fiber) | yes (or polling fallback) | P-SL-01 PC-1 |
 | A-SL-3 | `Aborted` runs with post-load game state visible | no (design never reads game state in `Aborted`) | P-SL-01 PC-6 |
-| A-SL-4 | a GTA save snapshot never interleaves one LSAX tick | yes | source E1-8; runtime crash tests (S1b) |
+| A-SL-4 | a GTA save snapshot never interleaves one LSAX tick | yes | source E1-8; P-SL-01 PC-4 tick markers |
 | A-SL-5 | `SPx_TOTAL_CASH` restored from the save on load | yes | P-SL-01 PC-3 |
 | A-SL-6 | a persisted, monotonic play-time stat exists | yes | P-SL-01 PC-2 |
 | A-SL-7 | save-file writes observable (mtime/size/hash) while LSAX runs | yes | P-SL-01 PC-4 |

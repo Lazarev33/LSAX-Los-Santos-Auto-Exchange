@@ -342,7 +342,8 @@ system · no mandatory dependency on other mods' data files (reference SellVehic
 
 ## 28 Stage Acceptance Criteria → `LSAX-STAGE-ACCEPTANCE.md`
 
-Measurable per stage; Stage 1 split into S1a (independent of B-01) and S1b (requires B-01 closed).
+Measurable per stage. **No stage — and no part of Stage 1 — starts before SPEC_APPROVED** (D-GATE-1; MASTER ROADMAP v3;
+no Stage 1a exception). Until then only disposable probes and Phase-0 corrections are permitted.
 
 ## 29 Risk Register / Open Decisions → `LSAX-RISK-REGISTER.md`
 
@@ -375,7 +376,7 @@ Measurable per stage; Stage 1 split into S1a (independent of B-01) and S1b (requ
 
 | Stage | Spec sections |
 |---|---|
-| 1 Foundation, Identity & Persistence | §04, §05 (S1b gated), §06, §17, §19, §20 (inspector), §25 |
+| 1 Foundation, Identity & Persistence | §04, §05, §06, §17, §19, §20 (inspector), §25 |
 | 2 Odometer, Condition & Mods | §07 |
 | 3 Ownership, Provenance & History | §03, §08 |
 | 4 Valuation & Economy | §09, §18 |
@@ -428,6 +429,7 @@ Measurable per stage; Stage 1 split into S1a (independent of B-01) and S1b (requ
 | measurable stage acceptance criteria complete | PASS | STAGE-ACCEPTANCE |
 | compatibility/performance contracts complete | PASS (design) — third-party behaviour ASSUMPTION (R-COMP-1), budgets unmeasured | COMPAT, PERF |
 
-**Author's recommendation to the auditor:** do **not** grant SPEC_APPROVED until B-01 is closed by P-SL-01 on the target
-PC. If the auditor finds no other P0/P1 defects, the owner may authorise **Stage 1a only** (persistence-sync independent
-work, STAGE-ACCEPTANCE §S1a) while P-SL-01 is run; S1b and everything depending on save/load coupling stay blocked.
+**Author's recommendation to the auditor:** do **not** grant SPEC_APPROVED. B-01 and every RUNTIME-closure P0/P1 row of
+LSAX-RISK-REGISTER.md must first be closed with target-runtime evidence (P-SL-01, P-DB-01, P-ID-01, UI-S1 on GTA V
+Legacy 1.0.3725.0 + SHVDN 3.7.x + the full modpack), followed by an independent read-only re-audit. No production work
+of any stage — no Stage 1 subset — may start before SPEC_APPROVED (D-GATE-1).

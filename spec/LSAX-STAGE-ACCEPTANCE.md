@@ -1,6 +1,6 @@
 # LSAX — Measurable Stage Acceptance Criteria
 
-Document: LSAX-STAGE-ACCEPTANCE.md · Spec: LSAX MASTER SPEC v1.0 DRAFT1 · Status: DRAFT for independent audit
+Document: LSAX-STAGE-ACCEPTANCE.md · Spec: LSAX MASTER SPEC v1.0 DRAFT2 · Status: DRAFT for independent re-audit
 
 Rules: a stage is accepted only with the evidence listed (LSAX-TEST-STRATEGY.md §6: build hash, game build, SHVDN
 version, modpack list, seeds, raw result files) and an independent read-only review. Every criterion below is
@@ -8,37 +8,35 @@ pass/fail and measurable. Cross-cutting at **every** stage: 0 user-facing hardco
 (T-L10N-1..5), forbidden-native scan clean (T-COMP-1), no unbounded collections (inspector counters), all world
 actions bounded (TSM §9), idempotency/anti-exploit designed in (not deferred to Stage 11).
 
-## Phase 0 gate (this document set)
+## Phase 0 gate (this document set) — D-GATE-1
 
-SPEC_APPROVED requires the checklist in LSAX-MASTER-SPEC-v1.0.md Appendix L with every item PASS and no open P0/P1
-**that blocks the next stage**. Current self-assessment: item "save/load persistence model proven feasible" = **FAIL
-(BLOCKER B-01)** → this draft cannot be approved as-is. The author does not grant SPEC_APPROVED.
+SPEC_APPROVED (MASTER ROADMAP v3) requires **all** of: every required Phase-0 domain complete; save/load persistence
+feasibility proven with target-runtime evidence (B-01 closed); **no unresolved P0; no unresolved P1** (every P0/P1
+row of LSAX-RISK-REGISTER.md closed); an independent read-only re-audit passes. The checklist is LSAX-MASTER-SPEC-v1.0.md
+Appendix L. **No stage — and no part of any stage — may start before SPEC_APPROVED.** There is no Stage 1a exception
+and no persistence-independent subset: until SPEC_APPROVED, only disposable feasibility probes (`phase0-probes/`,
+never shipped, never copied into LSAX) and Phase-0 specification corrections are permitted. Current self-assessment:
+B-01 and the RUNTIME-closure P1 rows are open → **BLOCKED_RUNTIME_VALIDATION**. The author does not grant
+SPEC_APPROVED; only a later independent reviewer may.
 
-## Stage 1 — Foundation, Identity & Persistence (split by B-01)
-
-**S1a (may start once the spec is approved with B-01 explicitly carried as a gated item):**
+## Stage 1 — Foundation, Identity & Persistence (entry: SPEC_APPROVED)
 
 | Criterion | Measure |
 |---|---|
 | Solution builds reproducibly: `LSAX.Core` (netstandard2.0, no SHVDN/UI refs), `LSAX.Persistence`, `LSAX.Adapters.Shvdn` (net48), `LSAX.Localization`, `LSAX.Diagnostics` | two clean builds → identical assembly hashes (deterministic build) |
 | Core purity | reference graph check: `LSAX.Core` references only BCL (T-ARCH-1) |
-| VehicleId/LsaxVin, fingerprint scoring, collision matrix | T-ID-1, T-ID-2 green; 20/20 collision rows |
-| TimeService AT/MT | T-TIME-1, T-TIME-2 green |
-| SQLite layer, schema v1, migrations framework, journal + projection + snapshot | T-DB-1..5 green; P-DB-01 PASS on target PC |
-| Transaction-core skeleton (no market) | T-TX-1..3 green |
+| VehicleId/LsaxVin, fingerprint scoring, lossless candidate search, collision matrix, handle-reuse safety | T-ID-1, T-ID-2 green; 20/20 collision rows; identity regressions (P1-01/P1-02) ported and green |
+| TimeService AT/MT, skip-credit durability | T-TIME-1, T-TIME-2 green; time regressions (P1-03) ported and green |
+| SQLite layer, schema v1, migrations framework, journal + projection DB + projection backup | T-DB-1..5 green; P-DB-01 PASS on target PC (already required for SPEC_APPROVED) |
+| Transaction-core skeleton (no market) incl. system transactions | T-TX-1..3 green; P0-02 and P1-04 regressions ported and green |
+| Save/load anchoring: session token, save ledger, hypothesis exclusion, RECONCILE gate + resolution stub | T-SL-1 (random model, 0 safety failures, full path coverage), T-SL-2 (P0-03 regression cases) green |
+| Runtime save/load | P-SL-01 T1–T14 re-run with LSAX Stage 1: every step's outcome equals the predicted outcome table in README-PROBES (anchor / refuse with the listed reason); 0 false anchors; correct anchor in 10/10 loads of each LSAX-observed slot kind |
+| Crash recovery | T-TX-4 matrix 100 %; runtime: 10 forced script aborts at each of C1/CA/CB/C2 → outcome as TSM §10 predicts, 10/10 |
+| Identity runtime | T-RT-ID-1: 0 wrong binds in 80 events; ambiguous cases refused |
 | Logging | `LSAX.log` format per compatibility §3; rotation test |
 | Localisation framework | T-L10N-1..8 green with ≥ 40 keys |
 | Configuration | invalid config values → defaults + WARN, never crash (fuzz 1 000 random configs) |
 | Debug Inspector API | `InspectVehicle(entity)` returns identity/confidence, mileage, condition, ownership/provenance, history, valuation breakdown (stub allowed), market state (stub), as `MessageRef`s; renderer-independent |
-
-**S1b (save/load synchronisation) — entry requires B-01 closed (P-SL-01 PC-1…PC-5 PASS 10/10):**
-
-| Criterion | Measure |
-|---|---|
-| Anchoring, ledger, stop markers, ghost timelines, RECONCILE gate | T-SL-1 (800 episodes, 0 safety failures), T-SL-2 table green |
-| Runtime | P-SL-01 T1–T13 re-run with LSAX S1b: 0 RECONCILE in T1–T13; correct anchor in 10/10 loads per slot kind |
-| Crash recovery | T-TX-4 matrix 100 %; runtime: 10 forced script aborts at C1/C2 → ABORT/ROLL-FORWARD as predicted, 10/10 |
-| Identity runtime | T-RT-ID-1: 0 wrong binds in 80 events; ambiguous cases refused |
 
 ## Stage 2 — Odometer, Condition & Modification State
 
