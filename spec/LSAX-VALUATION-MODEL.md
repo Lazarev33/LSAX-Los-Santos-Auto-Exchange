@@ -1,6 +1,6 @@
 # LSAX — Valuation Engine: Mathematical Contract
 
-Document: LSAX-VALUATION-MODEL.md · Spec: LSAX MASTER SPEC v1.0 DRAFT1 · Status: DRAFT for independent audit
+Document: LSAX-VALUATION-MODEL.md · Spec: LSAX MASTER SPEC v1.0 DRAFT2 · Status: DRAFT for independent re-audit
 
 Normative reference implementation: `phase0-probes/sim/valuation_ref.py` (+ `lsax_ref_math.py`). The C#
 implementation (Stage 4) must reproduce its outputs **exactly** for the golden vectors (§8). Balance constants are

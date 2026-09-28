@@ -191,7 +191,15 @@ the audited branch `claude/focused-thompson-ilnspm`, DRAFT1 files, PR #1 or `mai
       executed by P-DB-01 in C0-15); journal backup = online backup of main; rebuild from newest ancestor snapshot.
       applied_idem moved to main (dedupe must be atomic with the journal commit). Files: DB-SCHEMA §1/§2/§3/§5/§6/§7/§8,
       PERFORMANCE §2, decisions. Regression regress/regress_p2_01_backup.py 11/11 PASS (real SQLite backup API).
-- [ ] C0-13 Reconcile all affected documents
+- [x] C0-13 Reconcile all affected documents
+      Stale-term sweep (Stage 1a/S1a, wallet_after causal proof, INFERRED/ghost downtime lineage, handle fast path,
+      <=32 uniqueness, PT/MT reconstruction, LEGACY -> CLEAN, old NPC seed formula, projection-only backup, stop
+      markers, heartbeat, E8-5 claims): all spec headers DRAFT2; MASTER header/summary/glossary/§05/§06/§10/§16/§28/
+      §29/App. L rewritten; TEST-STRATEGY aligned (T-SL-1/2, T-TX-4/4b/6, T-ID-4, T-TIME-3, T-GEN-8, T-PROV-1,
+      T-DB-6, T-GATE-1; ID collisions avoided); PERFORMANCE rows (MT checkpoint, token re-tag, poll cadence);
+      LOCALIZATION keys for new RECONCILE reasons + UNKNOWN title (RU/EN parity, no typographic glyphs); NPC-GEN
+      example headings; feasibility E8-5/E8-6 marked SUPERSEDED; decisions: withdrawn rows marked inline,
+      D-SL-1/D-SL-7 amended; RISK-REGISTER counts (13 P1, 14 P2).
 - [ ] C0-14 Add/run deterministic regression suite
 - [ ] C0-15 Review/prepare P-SL-01 and P-DB-01
 - [ ] C0-16 Full xref/static/spec self-audit

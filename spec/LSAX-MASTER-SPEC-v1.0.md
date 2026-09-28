@@ -1,9 +1,12 @@
-# LSAX — Los Santos Auto Exchange · MASTER SPEC v1.0 DRAFT 1
+# LSAX — Los Santos Auto Exchange · MASTER SPEC v1.0 DRAFT 2
 
-Status: **DRAFT 1 for independent READ-ONLY audit. Not SPEC_APPROVED** (the author does not grant approval; see
-Appendix L — one gate item is FAIL: BLOCKER B-01).
+Status: **DRAFT 2 for independent READ-ONLY re-audit. Not SPEC_APPROVED** (the author does not grant approval; see
+Appendix L — gate items FAIL: BLOCKER B-01 and the RUNTIME-closure P1 rows → BLOCKED_RUNTIME_VALIDATION).
+DRAFT 2 = Correction Pass 1 of the independent audit of DRAFT 1 (CORRECTION_REQUIRED: 4 P0, 6 P1, 1 P2); every
+finding, its correction and its regression are listed in `LSAX-PHASE0-CORRECTION-1-REPORT.md`.
 Runtime target: GTA V Legacy 1.0.3725.0 · ScriptHookVDotNet 3.7.x · C# / .NET Framework 4.8.
-Date: 2026-09-28. Evidence base: `feasibility.md` (E0–E8), `decisions.md`, `risks.md`, `evidence/`, `phase0-probes/`.
+Date: 2026-09-28. Evidence base: `feasibility.md` (E0–E9), `decisions.md`, `risks.md`, `evidence/`, `phase0-probes/`
+(reference models in `sim/`, deterministic correction regressions in `regress/`, disposable runtime probes in `shvdn/`).
 
 Evidence labels used throughout: **VERIFIED FEASIBILITY** (qualified as *source*, *compile*, *sim* or *runtime* —
 nothing in Phase 0 is *runtime*), **DESIGN DECISION**, **ASSUMPTION**, **OPEN RISK**, **BLOCKER**.
@@ -32,10 +35,10 @@ LSAX.Ui.<Renderer> (chosen by UI-S1; Core never references it)   LSAX.Diagnostic
 
 | Area | Result |
 |---|---|
-| Save/load synchronisation | Model D "Anchored Timeline" selected; logic VERIFIED (sim) with 0 safety failures in 800 crash/load episodes; runtime assumptions unproven → **BLOCKER B-01** with an exact, compile-verified probe (P-SL-01) |
+| Save/load synchronisation | Model D "Anchored Timeline" selected; DRAFT 2 logic VERIFIED (sim + deterministic regressions incl. the audit counterexamples, E9) with positive-evidence-only anchoring and recovery; runtime assumptions unproven → **BLOCKER B-01** with an exact, compile-verified probe and procedure (P-SL-01, README-PROBES) |
 | GTA/SHVDN capabilities | lifecycle, money API, decorators, assembly loading VERIFIED (source) at SHVDN@56ba3bf; 100+ natives verified to exist; absence of any save-slot-id native VERIFIED |
 | Maths | valuation, NPC generation, Heat: integer-deterministic reference models VERIFIED (sim) |
-| Transaction core | single-tick PREPARE/APPLY/COMMIT with evidence-only recovery, VERIFIED (sim) |
+| Transaction core | single-tick PREPARE/APPLY/COMMIT; recovery only from LSAX's own flushed apply status + session token, else RECONCILE; system transactions with deterministic keys — VERIFIED (sim + regressions) |
 
 Reading guide: this file is normative for cross-cutting rules and indexes the companion documents, which are
 normative for their domains.
@@ -51,23 +54,28 @@ normative for their domains.
 | bp | basis point, 10 000 bp = 1.0 |
 | Campaign | One GTA story playthrough as seen by LSAX; root of a timeline tree |
 | Commit | A committed LSAX logical transaction recorded on a timeline with its domain events |
-| Continuation | Anchoring outcome "the world went on from LSAX's last known state" (no load) |
+| Continuation | Anchoring outcome "same live game session", proven only by the session token (SAVELOAD §4.3, D-SL-14) |
 | Deal | Multi-tick orchestration (meeting, inspection, delivery) around exactly one atomic transaction |
-| Decorator hint | Per-session int token on an entity for fast re-identification; never identity |
+| Decorator hint | Per-session int token on a vehicle entity; orders re-observation only, never identity (DOMAIN §4.3) |
+| Generation identity | `(campaign, market_step_index, segment, generation_ordinal)` of an NPC vehicle; injective source of its VehicleId (D-GEN-6) |
+| Hypothesis exclusion | Token-less anchoring: every explanation of the loaded world is enumerated; correlations may only exclude; accept only if all remaining agree and one is a content-identified save (D-SL-15) |
+| LEGACY_TRUSTED | Rule set that may give a first-run import CLEAN title; empty until a runtime-proven unspoofable marker exists (D-PROV-1) |
 | Effective Heat E | `max(VH, PH/2)` for a deal |
 | Fingerprint | Multifactor, native-readable description of a vehicle (model gate, plate, colours, mods, cosmetics, context) |
 | GC / GT / PT / MT / OD / WALL | GTA clock / game timer / persisted play-time stat / Market Time / odometer distance / real UTC (TIME §1) |
-| Ghost timeline | Branch holding saves written while LSAX was not running (D-SL-10) |
 | Idempotency key | Deterministic key of a user/system intent; commits at most once on the active path |
 | Journal | Authoritative append-only record of commits and events; projection is derived |
 | Save ledger | LSAX's positive knowledge of save-file CONTENT (SHA-256) it observed being written or found at first run; slot state classifies current files TRUSTED / PRE_INSTALL / UNTRUSTED (SAVELOAD §4.1, D-SL-13) |
 | LsaxVin | 17-character display code derived from VehicleId |
-| PREPARED | Durable pre-apply transaction state; resolved only by evidence |
+| PREPARED | Durable pre-apply transaction state (`apply_status` APPLYING until LSAX's own flush says otherwise); resolved only by LSAX's own evidence or explicit player choice (TSM §7) |
 | Projection | Rebuildable current state of the active timeline path |
 | Protagonist wallet | `SP0/1/2_TOTAL_CASH` of Michael/Franklin/Trevor (E2-1) |
 | RECONCILE_REQUIRED | Safe-refusal state: trading paused until explicit player resolution |
 | Reservation | Exclusive claim of a vehicle/listing/offer by one transaction |
-| Stop marker | Last-tick values flushed in `Aborted` (never read from game state there) |
+| Aborted flush | LSAX's own in-memory values (apply status, MT state, last live play-time) written in `Aborted`; never game state |
+| Session token | Random int decorator on the player ped, re-tagged on character switch; equal token at restart = same live session (A-SL-10) |
+| System transaction | Journaled change without player intent (MT/odometer checkpoint, market step, Heat, expiry); single commit, deterministic key (TSM §3a) |
+| UNTRUSTED save file | Slot file whose content LSAX did not observe being written (copied, pre-existing changes, written while LSAX was down); never lineage (D-SL-13) |
 | Timeline | Branch of LSAX history; forks at every anchoring |
 | Title | Legal standing: CLEAN, SALVAGE, STOLEN, RECOVERED, UNDERGROUND, UNKNOWN (no LEGACY title; D-PROV-1) |
 | VehicleId | 128-bit LSAX identity of a specific vehicle |
@@ -97,7 +105,9 @@ ambiguous → never auto-merge, safe refusal.
 ## 05 Save/Load Persistence Feasibility → `LSAX-SAVELOAD-FEASIBILITY.md`
 
 Models A/B/C/D compared; **D selected conditionally**; decision record ADR-SL-001 (§8); exact experiment (§6) and
-fallback decision table (§7). **BLOCKER B-01** open.
+fallback decision table (§7, every fallback degrades toward refusal). DRAFT 2: positive evidence only — own flushed
+apply status, session token, content-identified observed saves; correlations only exclude; unobserved files are
+UNTRUSTED; wallet equality is never recovery evidence (D-SL-13…17, D-TX-4/5). **BLOCKER B-01** open.
 
 ## 06 Canonical Time Model → `LSAX-TIME-MODEL.md`
 
@@ -228,8 +238,8 @@ Seller profiles: EAGER (m 0–300 bp), NORMAL (300–800), GREEDY (800–1 200),
 ## 16 Transaction State Machine & Recovery → `LSAX-TRANSACTION-STATE-MACHINE.md`
 
 Invariants TX-I1…TX-I9; single-tick atomic core covering money + ownership + vehicle state + market state; idempotency
-on the active path; reservations; evidence-only recovery; deals around the core; bounded world actions; interruption
-matrix (§10).
+on the active path; reservations; own-evidence recovery (wallet values are never evidence, D-TX-4); system transactions
+(§3a, D-JRN-1); deals around the core; bounded world actions; interruption matrix (§10).
 
 ## 17 Persistence / SQLite Schema / Migrations → `LSAX-DB-SCHEMA-DRAFT.md`
 
@@ -307,7 +317,7 @@ Lively World, Unified Shadow Logger, Crime Jobs, LSAX; entity-conflict rules; fo
 | AX-1 | duplicate VIN / clones | VehicleId/LsaxVin unique; clones never inherit a title (C8/C9); CLONE_SUSPECT |
 | AX-2 | replayed commit | idempotency on the active path (TX-I2) |
 | AX-3 | double payment / double sale | reservations + wallet verify-before-apply (TX-I3/I4) |
-| AX-4 | save/load/reload/crash mid-deal | anchoring + evidence-only recovery; RECONCILE otherwise (TX-I7) |
+| AX-4 | save/load/reload/crash mid-deal | positive-evidence anchoring + own-evidence recovery; RECONCILE otherwise (TX-I7, D-SL-15, D-TX-4) |
 | AX-5 | stolen → legal bypass | no title path from UNKNOWN/STOLEN/UNDERGROUND to CLEAN; plate swap/respray never change title; first-run import never yields CLEAN without a probe-proven LEGACY_TRUSTED rule (D-PROV-1) |
 | AX-6 | trainer mutation | odometer/wear LSAX-owned; native repair doesn't reset wear; mutations while Dormant lower identity confidence (refusal) |
 | AX-7 | sold-vehicle respawn | `GAME_RESPAWN_OF_SOLD` → not registrable/sellable |
@@ -352,7 +362,8 @@ no Stage 1a exception). Until then only disposable probes and Phase-0 correction
 
 ## 29 Risk Register / Open Decisions → `LSAX-RISK-REGISTER.md`
 
-1 BLOCKER (B-01), 12 P1 risks, 13 P2 risks/constraints, 6 open decisions.
+1 BLOCKER (B-01), 13 P1 risks (2 mitigated by design, 11 need runtime evidence or an owner decision), 14 P2
+risks/constraints, 6 open decisions. Every open P0/P1 blocks SPEC_APPROVED (D-GATE-1).
 
 ## 30 Roadmap Mapping
 
@@ -362,7 +373,7 @@ no Stage 1a exception). Until then only disposable probes and Phase-0 correction
 | 2 Domain model | DOMAIN-MODEL |
 | 3 Ownership/provenance | DOMAIN-MODEL §5 |
 | 4 Persistent identity | DOMAIN-MODEL §4 |
-| 5 Save/load feasibility spike | SAVELOAD, phase0-probes (P-SL-01/02), sim E8-5 |
+| 5 Save/load feasibility spike | SAVELOAD, phase0-probes (P-SL-01/02), sim + regressions E9 |
 | 6 Canonical time | TIME-MODEL |
 | 7 SQLite/persistence, schema_version, migrations, recovery | DB-SCHEMA-DRAFT |
 | 8 Valuation contract, golden vehicles | VALUATION-MODEL |
@@ -419,20 +430,22 @@ no Stage 1a exception). Until then only disposable probes and Phase-0 correction
 | Gate item | Self-assessment | Evidence / reason |
 |---|---|---|
 | glossary complete | PASS | §01 |
-| ownership/provenance boundaries complete | PASS | DOMAIN §5 |
-| vehicle identity model complete | PASS (design) — runtime hit-rates pending P-ID-01; R-ID-4 (P1, Stage 3) | DOMAIN §4 |
-| **save/load persistence model proven feasible** | **FAIL — BLOCKER B-01** | logic VERIFIED (sim, E8-5); runtime assumptions A-SL-1/5/6/7 unproven; exact experiment SAVELOAD §6 |
-| canonical time model complete | PASS (PT depends on A-SL-6, used only for anchoring) | TIME |
-| persistence/schema/migration/recovery complete | PASS (design) — native load R-DB-1 (P1) pending P-DB-01 | DB-SCHEMA |
+| ownership/provenance boundaries complete | PASS (design) — no laundering path (D-PROV-1, regression P1-06) | DOMAIN §5 |
+| vehicle identity model complete | PASS (design) — handle reuse and candidate bound corrected (D-ID-6/7/8, regression P1-01/02); **R-ID-4 (P1) needs P-ID-01 → FAIL until run** | DOMAIN §4 |
+| **save/load persistence model proven feasible** | **FAIL — BLOCKER B-01** | logic VERIFIED (sim + regressions, E9-1…E9-4); runtime assumptions A-SL-1, 4–10, 12–14 unproven; exact experiment SAVELOAD §6 / README-PROBES |
+| canonical time model complete | PASS (design) — PT anchor-only, MT from LSAX records (D-TIME-2, regression P1-03) | TIME |
+| persistence/schema/migration/recovery complete | PASS (design) — two-file architecture (D-DB-4, regression P2-01); **R-DB-1/R-DB-2/R-COMP-2 (P1) need P-DB-01 → FAIL until run** | DB-SCHEMA |
 | valuation mathematical contract complete | PASS — constants tunable with simulation criteria | VALUATION, E8-2 |
-| NPC generation contract complete | PASS | NPC-GEN, E8-3 |
+| NPC generation contract complete | PASS — injective generation identity (D-GEN-6, regression P1-05) | NPC-GEN, E8-3, E9 |
 | Heat model complete | PASS | HEAT, E8-4 |
 | economy contract complete | PASS — balance band OD-2 open (P2) | §18 |
-| transaction invariants/failure states complete | PASS | TSM, E8-5 |
+| transaction invariants/failure states complete | PASS (design) — own-evidence recovery, system transactions (D-TX-4/5, D-JRN-1; regressions P0-02, P1-04) | TSM |
 | localization contract/enforcement complete | PASS | LOCALIZATION |
 | testing strategy complete | PASS | TEST-STRATEGY |
-| measurable stage acceptance criteria complete | PASS | STAGE-ACCEPTANCE |
-| compatibility/performance contracts complete | PASS (design) — third-party behaviour ASSUMPTION (R-COMP-1), budgets unmeasured | COMPAT, PERF |
+| measurable stage acceptance criteria complete | PASS — single Stage 1, entry SPEC_APPROVED (D-GATE-1, regression P0-04) | STAGE-ACCEPTANCE |
+| compatibility/performance contracts complete | **FAIL until runtime** — R-COMP-1, R-ECO-1, R-ENV-1, R-UI-1 (P1) need target-runtime observation | COMPAT, PERF |
+| no open P0/P1 | **FAIL** — B-01 and the RUNTIME-closure P1 rows (RISK-REGISTER §1) | RISK-REGISTER |
+| independent read-only re-audit passed | not yet performed (only an independent reviewer may issue SPEC_APPROVED) | — |
 
 **Author's recommendation to the auditor:** do **not** grant SPEC_APPROVED. B-01 and every RUNTIME-closure P0/P1 row of
 LSAX-RISK-REGISTER.md must first be closed with target-runtime evidence (P-SL-01, P-DB-01, P-ID-01, UI-S1 on GTA V

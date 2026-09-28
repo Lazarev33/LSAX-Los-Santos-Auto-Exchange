@@ -139,7 +139,7 @@ FLEET 33 %, NEGLECTED 28 %, ENTHUSIAST 16 %; cap 8.
 
 ## 6. Verification (reference run, E8-3)
 
-N = 20 000 per segment, seed 1234567, day 42: **0 constraint violations, 0 fallbacks** in every segment.
+N = 20 000 per segment, campaign seed 1234567, market step 42: **0 constraint violations, 0 fallbacks** in every segment.
 
 | Segment | Spearman(age, odo) | Median annual km (archetype: km) | Mean M (archetype: M) | Mean accidents | Mean owners |
 |---|---:|---|---|---:|---:|
@@ -152,9 +152,9 @@ N = 20 000 per segment, seed 1234567, day 42: **0 constraint violations, 0 fallb
 
 (CLASSIC correlation is weak by design: all are old; usage, not age, drives mileage.)
 
-## 7. Initial mileage / generation examples (seed 1234567, market day 42)
+## 7. Initial mileage / generation examples (campaign seed 1234567, market step index 42)
 
-| Slot | Segment | Age mo | Archetype | Odo km | km/yr | M | B | Service | Accidents (severity, repaired) | Title | Owners |
+| Ordinal | Segment | Age mo | Archetype | Odo km | km/yr | M | B | Service | Accidents (severity, repaired) | Title | Owners |
 |---|---|---:|---|---:|---:|---:|---:|---:|---|---|---:|
 | 0 | MAINSTREAM | 80 | COMMUTER | 41,250 | 6,188 | 890 | 824 | 833 | SEVERE ✓, MODERATE ✓ | CLEAN | 1 |
 | 1 | MAINSTREAM | 159 | LOW_USE | 77,874 | 5,877 | 853 | 892 | 846 | — | CLEAN | 3 |

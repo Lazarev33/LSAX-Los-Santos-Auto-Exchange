@@ -1,6 +1,6 @@
 # LSAX — Localization Contract & Enforcement
 
-Document: LSAX-LOCALIZATION-CONTRACT.md · Spec: LSAX MASTER SPEC v1.0 DRAFT1 · Status: DRAFT for independent audit
+Document: LSAX-LOCALIZATION-CONTRACT.md · Spec: LSAX MASTER SPEC v1.0 DRAFT2 · Status: DRAFT for independent re-audit
 
 **ru-RU is primary and default. en-US has full parity. No user-facing hardcoded strings.** (mandatory invariant 6)
 
@@ -86,6 +86,10 @@ Test vectors (T-L10N-4): ru 1 объявление, 2 объявления, 5 о
 | `lsax.reconcile.title` | LSAX: требуется сверка | LSAX: reconciliation required |
 | `lsax.reconcile.body.ambiguous` | Не удалось однозначно сопоставить загруженное сохранение с историей LSAX. Сделки приостановлены до вашего выбора. | The loaded save could not be matched unambiguously to LSAX history. Trading is paused until you choose. |
 | `lsax.reconcile.action.new_campaign` | Начать новую историю LSAX для этого сохранения | Start a new LSAX history for this save |
+| `lsax.reconcile.body.pending_unknown` | Игра остановилась во время сделки по {vehicle}. LSAX не знает, прошла ли она. Проверьте деньги и гараж и выберите вариант. | The game stopped during the deal for {vehicle}. LSAX cannot tell whether it went through. Check your money and garage, then choose. |
+| `lsax.reconcile.body.untrusted_present` | В папке сохранений есть файлы, запись которых LSAX не наблюдал ({slots}). Подтвердите, какое сохранение загружено. | The save folder contains files LSAX did not see being written ({slots}). Confirm which save is loaded. |
+| `lsax.reconcile.action.choose_candidate` | `Это сохранение: {slot}, {saved_at}` | `This is the save: {slot}, {saved_at}` |
+| `lsax.title.status.UNKNOWN` | Происхождение неизвестно | Unknown provenance |
 | `lsax.market.listing.count` | `{count, plural, one {# объявление} few {# объявления} many {# объявлений} other {# объявления}}` | `{count, plural, one {# listing} other {# listings}}` |
 | `lsax.market.offer.received` | `{buyer} предлагает {amount:money} за {vehicle}.` | `{buyer} offers {amount:money} for your {vehicle}.` |
 | `lsax.valuation.line.F_age` | `Возраст: {months} мес.` | `Age: {months} mo` |

@@ -1,6 +1,6 @@
 # LSAX — Reference Archive Review (READ-ONLY)
 
-Document: LSAX-REFERENCE-REVIEW.md · Spec: LSAX MASTER SPEC v1.0 DRAFT1 · Status: DRAFT for independent audit
+Document: LSAX-REFERENCE-REVIEW.md · Spec: LSAX MASTER SPEC v1.0 DRAFT2 · Status: DRAFT for independent re-audit
 
 ## 1. Scope and rules
 

@@ -32,7 +32,7 @@ P0/P1. Only disposable probes (`phase0-probes/`) and Phase-0 corrections are all
 
 | ID | Label | Risk | Mitigation | Exit |
 |---|---|---|---|---|
-| R-SL-5 | OPEN RISK | coarse play-time granularity increases ambiguity | D-SL-9; measure G | G measured by P-SL-01 |
+| R-SL-5 | OPEN RISK | coarse play-time granularity widens exclusion brackets → more RECONCILE | poll brackets (D-SL-17); sim realistic 16.7 % (1 s) vs 15.2 % (1 ms) | G measured by P-SL-01 PC-2 |
 | R-SL-6 | ASSUMPTION A-SL-4 | a save snapshot could interleave an LSAX tick | source evidence E1-8; fallback: skip apply while save flags active | T-SL runtime crash tests |
 | R-DB-3 | OPEN RISK | leaked connection locks DB after reload | close in `Aborted`; busy_timeout | P-DB-01 step 4 |
 | R-ID-2 | OPEN RISK | decorators lost on recreation | hint only | P-ID-01 hit-rate recorded |

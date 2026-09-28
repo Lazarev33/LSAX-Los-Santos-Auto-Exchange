@@ -1,6 +1,6 @@
 # LSAX — Performance Budget & Cadence
 
-Document: LSAX-PERFORMANCE-BUDGET.md · Spec: LSAX MASTER SPEC v1.0 DRAFT1 · Status: DRAFT for independent audit
+Document: LSAX-PERFORMANCE-BUDGET.md · Spec: LSAX MASTER SPEC v1.0 DRAFT2 · Status: DRAFT for independent re-audit
 
 All numbers are **design budgets** (DESIGN DECISION). None is measured yet (no GTA runtime in Phase 0); Stage 12
 verifies them on the target PC (T-PERF-*). Hard platform limit: SHVDN aborts a script whose tick exceeds
@@ -25,8 +25,9 @@ verifies them on the target PC (T-PERF-*). Hard platform limit: SHVDN aborts a s
 | Market simulation step | every 60 MT min (= 2 real min) | worker: ≤ 30 generated vehicles, ≤ 200 listings updated, ≤ 50 offers resolved; main thread only applies results | worker ≤ 50 ms; main 0.20 / 0.50 ms |
 | Persistence enqueue (non-money) | on events | enqueue only | 0.05 / 0.10 ms |
 | **Transaction tick** (atomic core) | ≤ 1 per tick, ≤ 6 per MT min | 2 synchronous fsync'd journal commits (PREPARE, COMMIT on `main`) + 1 projection commit (`proj`, synchronous=NORMAL, no fsync) + ≤ 10 natives | **≤ 25 ms p95, ≤ 50 ms max** (allowed spike; R-DB-2) |
-| Save-file ledger poll | every 2 000 ms wall + before each transaction apply | metadata of ≤ 16 files; hashing on worker only when changed | 0.20 / 0.50 ms |
-| Heartbeat | every 3 000 ms play-time | enqueue 1 write | 0.02 ms |
+| Save-file ledger poll | every 2 000 ms wall, every tick while a save-event signal is active, and before each transaction apply | metadata of ≤ 16 files + 3 wallet stats + PT; SHA-256 on the worker only for changed files | 0.20 / 0.50 ms |
+| MT checkpoint (`SYS_MT_CHECKPOINT`) | every 60 s AT and at every skip credit (TIME §2.2) | enqueue 1 system transaction (coalescible) | 0.02 ms |
+| Session token re-tag | every tick | 1 `DECOR_GET_INT` on the player ped; `DECOR_SET_INT` only after a character switch | 0.01 ms |
 | Notifications | queue ≤ 32, show ≤ 1 per 3 s | | 0.05 / 0.10 ms |
 | Physical world scene (Stage 10) | ≤ 1 concurrent deal scene | ≤ 16 LSAX entities; tasks bounded (TSM §9) | 0.50 / 1.00 ms while active |
 | Debug inspector overlay (when open) | every tick | ≤ 40 text lines | 1.00 / 2.00 ms |

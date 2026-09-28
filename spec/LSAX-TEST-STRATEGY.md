@@ -1,6 +1,6 @@
 # LSAX — Testing Strategy
 
-Document: LSAX-TEST-STRATEGY.md · Spec: LSAX MASTER SPEC v1.0 DRAFT1 · Status: DRAFT for independent audit
+Document: LSAX-TEST-STRATEGY.md · Spec: LSAX MASTER SPEC v1.0 DRAFT2 · Status: DRAFT for independent re-audit
 
 ## 1. Structure
 
@@ -35,10 +35,14 @@ Stage gates additionally require the listed L3 runs (LSAX-STAGE-ACCEPTANCE.md).
 | T-TX-1 | idempotency | same key twice on the active path → second returns DUPLICATE with identical outcome, no effect | 100 % |
 | T-TX-2 | validation | each precommit rule (TSM §6) has a failing and a passing case | 100 % |
 | T-TX-3 | state machine | exhaustive transition table: only allowed transitions succeed | 100 % |
-| T-TX-5 | system transactions (P1-04) | port of `phase0-probes/regress/regress_p1_04_sysjournal.py`: per family crash before commit, lost ack, rebuild, double replay, branch regeneration, ordering gate, coalescing rule | 100 % |
+| T-TX-6 | system transactions (P1-04) | port of `phase0-probes/regress/regress_p1_04_sysjournal.py`: per family crash before commit, lost ack, rebuild, double replay, branch regeneration, ordering gate, coalescing rule | 100 % |
 | T-TX-4b | transaction recovery (P0-02) | port of `phase0-probes/regress/regress_p0_02_txn_recovery.py` and `regress_audit_repro.py` | 100 %; decision independent of wallet values |
 | T-ID-1 | identity scoring | collision matrix C1–C22 as table-driven cases with fake fingerprints | expected state for each row |
-| T-ID-3 | identity safety (P1-01/P1-02) | port of `phase0-probes/regress/regress_p1_01_02_identity.py`: handle reuse H1–H8, >32-candidate cases C1–C5, randomized equality with the unbounded reference | 100 %; 0 automatic binds differing from the reference |
+| T-ID-4 | identity safety (P1-01/P1-02) | port of `phase0-probes/regress/regress_p1_01_02_identity.py`: handle reuse H1–H8, >32-candidate cases C1–C5, randomized equality with the unbounded reference | 100 %; 0 automatic binds differing from the reference |
+| T-TIME-3 | time contract (P1-03) | port of `regress_p1_03_time.py` (pause, loading, switch, fades, stall, sleep, save right after sleep, crash before checkpoint, save/load around a skip, offline freeze, rolling cap, PT independence) | 100 % |
+| T-GEN-8 | NPC identity (P1-05) | port of `regress_p1_05_npc_identity.py` | 100 %; 0 repeated VehicleIds |
+| T-PROV-1 | provenance (P1-06) | port of `regress_p1_06_legacy.py`: import classification and exhaustive title reachability | 100 %; no path to CLEAN without positive origin |
+| T-GATE-1 | stage gate (P0-04) | `regress_p0_04_gate.py` static scan of the specification set | 0 carve-out lines |
 | T-ID-2 | identity | thresholds: score 85 unique → BIND; 84 → AMBIGUOUS; gap 19 → AMBIGUOUS; never auto-merge | 100 % |
 | T-L10N-1..8 | localisation | LSAX-LOCALIZATION-CONTRACT.md §7 | as specified |
 | T-ECO-1 | fees | fee formulas with min/max caps, rounding | exact |
@@ -48,8 +52,8 @@ Stage gates additionally require the listed L3 runs (LSAX-STAGE-ACCEPTANCE.md).
 
 | ID | Area | Test | Pass |
 |---|---|---|---|
-| T-SL-1 | save/load model | C# port of `journal_timeline_ref.py`: 800 episodes, both mixes, G = 1 ms and 1 000 ms | 0 safety-invariant failures; tripwire as in the reference |
-| T-SL-2 | anchoring | table cases: continuation, in-session load of each slot kind, ghost slot with pending txn, NO_MATCH new game, AMBIGUOUS coincidences | expected verdict per case |
+| T-SL-1 | save/load model | C# port of the DRAFT2 `journal_timeline_ref.py`: both mixes, G = 1 ms and 1 000 ms, default 60 episodes (fast) and 200 (audit grade) | 0 safety-invariant failures; non-vacuity and full path-coverage tripwires as in the reference |
+| T-SL-2 | anchoring | port of `regress_p0_03_save_lineage.py` (23 cases: foreign/older/newer copies, collisions, forged fingerprint, multiple slots, repeated restart, continuation, rollback, missed start, pre-install, new game, residual R-SL-7 demo) and `regress_audit_repro.py` | expected verdict per case |
 | T-TX-4 | recovery | crash injection at C0/C1/CA/CB/C2/C3 × {clean reload, unclean same session, downtime with other-mod cash writes, token lost, game crash + load} × external cash ∈ {none, = wallet_before, = wallet_after} (TSM §10 matrix) | matrix 100 %; verdict never depends on wallet values; roll-forward only on own APPLIED + session token |
 | T-TX-5 | concurrency | fake Crime-Jobs cash write between PREPARE and apply | ABORTED_CONCURRENT_CASH |
 | T-DB-1 | schema | create from scratch; all CHECK constraints reject out-of-range values | 100 % |
@@ -57,6 +61,7 @@ Stage gates additionally require the listed L3 runs (LSAX-STAGE-ACCEPTANCE.md).
 | T-DB-3 | projection | rebuild from journal == incremental projection (bit-for-bit dump) after random 5 000-commit histories | 100 % |
 | T-DB-4 | integrity | corrupted DB file → read-only mode + localised prompt; no transactions | 100 % |
 | T-DB-5 | newer schema | DB with higher schema_version → refuse to open | 100 % |
+| T-DB-6 | backup architecture (P2-01) | port of `regress_p2_01_backup.py`: proj-only snapshot, journal backup, crash between the two commits, projection loss, ancestor-snapshot restore + replay, off-path snapshot rejected, concurrent-write snapshot | 100 % |
 | T-ID-3 | reacquisition | fake world: store/retrieve, stream out/in, plate change while bound/dormant, clones, handle reuse | matrix outcomes |
 | T-MKT-1 | legal market | end-to-end via debug adapter: list → offers → counter → accept → commit; expiry in MT; stale offer rejected after vehicle state change | as specified in Stage 7 acceptance |
 

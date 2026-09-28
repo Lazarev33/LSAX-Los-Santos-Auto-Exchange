@@ -14,7 +14,7 @@ use the domain assigned to them in §3. All values are integers.
 
 | ID | Name | Source | Unit / type | Persisted | Monotonic | Label |
 |---|---|---|---|---|---|---|
-| WALL | Real UTC time | `DateTime.UtcNow` (.NET BCL) | ms, int64 | yes (logs, ledger, stop markers) | no (system clock can change) | VERIFIED (BCL) |
+| WALL | Real UTC time | `DateTime.UtcNow` (.NET BCL) | ms, int64 | yes (logs, ledger, Aborted flush) | no (system clock can change) | VERIFIED (BCL) |
 | GT | GTA game timer | `GET_GAME_TIMER` = `Game.GameTime` (E5-1) | ms, int32 | **never** | within a session only; behaviour across load not assumed | VERIFIED (API) |
 | AT | Active session time | LSAX: Σ clamped GT deltas while active (§2.1) | ms, int64 | no (per session) | yes | DESIGN DECISION |
 | PT | Persisted play-time stat | SP stat read via `STAT_GET_INT` (name TBD by P-SL-01) | ms (granularity G) | inside the GTA save | assumed within a session | **ASSUMPTION A-SL-6** — anchor coordinate only (save/load exclusion); never a gameplay or MT source |
@@ -94,7 +94,7 @@ verified in source). GC is never authoritative for expiry, decay or age.
 | Offline absence | none | MT frozen |
 | Sleep / time skip | MT credit (capped) | world "moves on" a bounded amount |
 | Save/load rollback | MT via anchoring | coupling |
-| Logs, diagnostics, ledger, stop markers | WALL | forensic |
+| Logs, diagnostics, save ledger, Aborted flush | WALL | forensic |
 | Anchoring exclusion (poll bracket, LIVE test) | PT | LSAX-SAVELOAD-FEASIBILITY.md §4.2–§4.3; never MT |
 | Tick cadence, cache TTL, notification on-screen duration | GT/AT | session-local |
 | Anti-farm windows (e.g. underground sales per 48 MT h) | MT | save-coupled; cannot be reset by waiting offline |
