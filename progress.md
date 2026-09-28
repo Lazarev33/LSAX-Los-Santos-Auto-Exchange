@@ -200,7 +200,13 @@ the audited branch `claude/focused-thompson-ilnspm`, DRAFT1 files, PR #1 or `mai
       LOCALIZATION keys for new RECONCILE reasons + UNKNOWN title (RU/EN parity, no typographic glyphs); NPC-GEN
       example headings; feasibility E8-5/E8-6 marked SUPERSEDED; decisions: withdrawn rows marked inline,
       D-SL-1/D-SL-7 amended; RISK-REGISTER counts (13 P1, 14 P2).
-- [ ] C0-14 Add/run deterministic regression suite
+- [x] C0-14 Add/run deterministic regression suite
+      regress/run_regressions.py (10 suites, 2 634 checks, 14 s) + sim/run_all.py (fast default 60 episodes / --audit
+      200 episodes; now also runs identity_ref, time_ref, sysjournal_ref, legacy_ref and the regressions; writes
+      evidence/sim + evidence/regress with source hashes and run times). trace_journal.py ported to DRAFT2.
+      Audit-grade run: ALL PASS, total 192.8 s (journal model 159.5 s: 800 episodes, 4 522 crashes, 0 safety
+      failures, full coverage; realistic RECONCILE 17.1-18.3 %). feasibility.md E9-1..E9-12 added; SAVELOAD §5,
+      RISK-REGISTER/risks R-SL-3/R-SL-5 updated to audit-grade numbers.
 - [ ] C0-15 Review/prepare P-SL-01 and P-DB-01
 - [ ] C0-16 Full xref/static/spec self-audit
 - [ ] C0-17 Rebuild DRAFT2 package and hashes
