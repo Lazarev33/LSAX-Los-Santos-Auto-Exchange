@@ -1,0 +1,235 @@
+================================================================================
+FILE <scratch>/ref_sv/SellVehicle.dll
+ASSEMBLY SellVehicle 1 0 0 0
+-- AssemblyRef
+   mscorlib 4 0 0 0
+   ScriptHookVDotNet3 3 3 2 0
+   System.Windows.Forms 4 0 0 0
+   System.Drawing 4 0 0 0
+-- TypeDef (fields/methods)
+  TYPE .<Module> : VehicleDataLoader
+  TYPE .SellVehicle : Script
+     field markerPosition
+     field markerBlip
+     field SellKey
+     field isPlayerInsideSellMarker
+     field vehicles
+     method .ctor
+     method OnTick
+     method OnKeyDown
+     method TrySellVehicle
+     method GetVehicleCondition
+     method GetConditionColorCode
+     method DrawMarker
+     method CalculateSalePrice
+     method CreateBlip
+     method LoadAllVehicleData
+     method DisplayHelpTextThisFrame
+  TYPE .VehicleInfo : Object
+     field <Name>k__BackingField
+     field <Price>k__BackingField
+     field <Model>k__BackingField
+     field <GXT>k__BackingField
+     field <Make>k__BackingField
+     method get_Name
+     method set_Name
+     method get_Price
+     method set_Price
+     method get_Model
+     method set_Model
+     method get_GXT
+     method set_GXT
+     method get_Make
+     method set_Make
+     method .ctor
+  TYPE .VehicleDataLoader : Object
+     method LoadVehiclesFromIni
+     method ExtractValue
+-- TypeRef
+   System.Runtime.CompilerServices.CompilationRelaxationsAttribute
+   System.Runtime.CompilerServices.RuntimeCompatibilityAttribute
+   System.Diagnostics.DebuggableAttribute
+   .DebuggingModes
+   System.Reflection.AssemblyTitleAttribute
+   System.Reflection.AssemblyDescriptionAttribute
+   System.Reflection.AssemblyConfigurationAttribute
+   System.Reflection.AssemblyCompanyAttribute
+   System.Reflection.AssemblyProductAttribute
+   System.Reflection.AssemblyCopyrightAttribute
+   System.Reflection.AssemblyTrademarkAttribute
+   System.Runtime.InteropServices.ComVisibleAttribute
+   System.Runtime.InteropServices.GuidAttribute
+   System.Reflection.AssemblyFileVersionAttribute
+   System.Runtime.Versioning.TargetFrameworkAttribute
+   GTA.Script
+   GTA.Math.Vector3
+   GTA.Blip
+   System.Windows.Forms.Keys
+   System.Collections.Generic.Dictionary`2
+   System.Object
+   System.EventArgs
+   System.Windows.Forms.KeyEventArgs
+   GTA.Vehicle
+   GTA.Model
+   .Enumerator
+   System.Collections.Generic.KeyValuePair`2
+   System.Runtime.CompilerServices.CompilerGeneratedAttribute
+   System.Diagnostics.DebuggerBrowsableState
+   System.Diagnostics.DebuggerBrowsableAttribute
+   System.Collections.Generic.IEnumerator`1
+   System.EventHandler
+   System.Windows.Forms.KeyEventHandler
+   GTA.Game
+   GTA.Control
+   GTA.Player
+   GTA.Ped
+   GTA.Entity
+   System.String
+   System.Int32
+   GTA.UI.Notification
+   GTA.PoolObject
+   System.Drawing.Color
+   GTA.World
+   GTA.MarkerType
+   System.Math
+   GTA.InputMethod
+   GTA.UI.Screen
+   GTA.BlipSprite
+   GTA.BlipColor
+   System.IO.Path
+   System.IO.Directory
+   System.IO.DirectoryInfo
+   GTA.Native.InputArgument
+   GTA.Native.Function
+   GTA.Native.Hash
+   System.IDisposable
+   System.IO.File
+   System.Collections.Generic.IEnumerable`1
+   System.Collections.IEnumerator
+-- MemberRef
+   System.Runtime.CompilerServices.CompilationRelaxationsAttribute::.ctor
+   System.Runtime.CompilerServices.RuntimeCompatibilityAttribute::.ctor
+   System.Diagnostics.DebuggableAttribute::.ctor
+   System.Reflection.AssemblyTitleAttribute::.ctor
+   System.Reflection.AssemblyDescriptionAttribute::.ctor
+   System.Reflection.AssemblyConfigurationAttribute::.ctor
+   System.Reflection.AssemblyCompanyAttribute::.ctor
+   System.Reflection.AssemblyProductAttribute::.ctor
+   System.Reflection.AssemblyCopyrightAttribute::.ctor
+   System.Reflection.AssemblyTrademarkAttribute::.ctor
+   System.Runtime.InteropServices.ComVisibleAttribute::.ctor
+   System.Runtime.InteropServices.GuidAttribute::.ctor
+   System.Reflection.AssemblyFileVersionAttribute::.ctor
+   System.Runtime.Versioning.TargetFrameworkAttribute::.ctor
+   System.Runtime.CompilerServices.CompilerGeneratedAttribute::.ctor
+   System.Diagnostics.DebuggerBrowsableAttribute::.ctor
+   GTA.Math.Vector3::.ctor
+   GTA.Script::.ctor
+   System.EventHandler::.ctor
+   GTA.Script::add_Tick
+   System.Windows.Forms.KeyEventHandler::.ctor
+   GTA.Script::add_KeyDown
+   GTA.Game::IsControlJustPressed
+   System.Windows.Forms.KeyEventArgs::get_KeyCode
+   GTA.Game::get_Player
+   GTA.Player::get_Character
+   GTA.Ped::IsInVehicle
+   GTA.Ped::get_CurrentVehicle
+   GTA.Entity::op_Inequality
+   GTA.Entity::get_Model
+   GTA.Model::get_Hash
+   .::ContainsKey
+   .::get_Item
+   GTA.Entity::get_Health
+   GTA.Player::get_Money
+   GTA.Player::set_Money
+   System.String::Format
+   System.String::Concat
+   GTA.UI.Notification::Show
+   GTA.PoolObject::Delete
+   System.String::op_Equality
+   GTA.Math.Vector3::get_Zero
+   System.Drawing.Color::get_Yellow
+   GTA.World::DrawMarker
+   GTA.Entity::get_Position
+   GTA.Math.Vector3::X
+   System.Math::Abs
+   GTA.Math.Vector3::Y
+   GTA.Math.Vector3::Z
+   GTA.Entity::op_Equality
+   GTA.Game::get_LastInputMethod
+   GTA.UI.Screen::ShowHelpTextThisFrame
+   System.Math::Max
+   GTA.World::CreateBlip
+   GTA.Blip::set_Sprite
+   GTA.Blip::set_Color
+   GTA.Blip::set_Name
+   GTA.Blip::set_Scale
+   GTA.Blip::set_IsShortRange
+   .::.ctor
+   System.IO.Path::Combine
+   System.IO.Directory::Exists
+   System.IO.Directory::CreateDirectory
+   System.IO.Directory::GetFiles
+   .::GetEnumerator
+   .::get_Current
+   .::get_Value
+   System.String::ToLower
+   GTA.Native.InputArgument::op_Implicit
+   GTA.Native.Function::Call
+   .::Add
+   .::set_Item
+   .::MoveNext
+   System.IDisposable::Dispose
+   System.Object::.ctor
+   System.IO.File::ReadLines
+   System.String::Contains
+   System.Int32::TryParse
+   System.String::IsNullOrEmpty
+   System.Collections.IEnumerator::MoveNext
+   System.String::IndexOf
+   System.String::get_Length
+   System.String::Substring
+   System.String::Trim
+-- UserStrings
+   US: '~y~You sold your '
+   US: '!\n'
+   US: '~s~Sell Price: ~g~${0:N0}\n'
+   US: '~s~Condition: '
+   US: '\n'
+   US: '~s~Original Price: ~b~${0:N0}'
+   US: '~r~This vehicle is not sellable.'
+   US: '~r~You need to be in a vehicle.'
+   US: 'Very Good'
+   US: 'Good'
+   US: 'Bad'
+   US: 'Very Bad'
+   US: '~g~'
+   US: '~y~'
+   US: '~o~'
+   US: '~r~'
+   US: '~s~'
+   US: '~r~You need to be in a vehicle to sell it.'
+   US: '~r~This vehicle cannot be sold here.'
+   US: '~r~Vehicle data is missing or invalid.'
+   US: 'E'
+   US: '~INPUT_CONTEXT~'
+   US: '~y~Press ~g~'
+   US: ' ~y~to sell '
+   US: '~s~\n'
+   US: '~s~Original Price: ~b~${0:N0}\n'
+   US: 'Sell Vehicles'
+   US: 'scripts'
+   US: 'PremiumDeluxeMotorsport'
+   US: 'Vehicles'
+   US: '*.ini'
+   US: 'STRING'
+   US: '[name]'
+   US: '[model]'
+   US: 'name'
+   US: 'price'
+   US: 'model'
+   US: 'gxt'
+   US: 'make'
+   US: '['
+   US: ']'

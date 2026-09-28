@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- DISPOSABLE PHASE 0 FEASIBILITY PROBE. NOT LSAX PRODUCTION CODE. Do not ship. -->
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <LangVersion>7.3</LangVersion>
+    <OutputType>Library</OutputType>
+    <AssemblyName>LsaxPhase0Probe</AssemblyName>
+    <RootNamespace>LsaxPhase0Probe</RootNamespace>
+    <Nullable>disable</Nullable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <PlatformTarget>x64</PlatformTarget>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- Compile-time reference only; lowest common API for SHVDN 3.6.0 .. 3.7.x nightly. -->
+    <PackageReference Include="ScriptHookVDotNet3" Version="3.6.0" ExcludeAssets="runtime" />
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="System.Windows.Forms" />
+  </ItemGroup>
+</Project>
