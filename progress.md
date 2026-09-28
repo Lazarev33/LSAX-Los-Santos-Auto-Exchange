@@ -58,9 +58,11 @@ feasibility.md and continue from the first item not marked [x]. Do not restart P
 - [ ] P0-05 Feasibility probes
       [x] F-a SHVDN lifecycle/money/decorator/API source evidence (feasibility.md E1..E5)
       [x] F-b Native existence + save-native absence scan (evidence/*.txt)
-      [ ] F-c Disposable SHVDN probes (phase0-probes/shvdn): P-SL-01 save/load signals,
+      [x] F-c Disposable SHVDN probes (phase0-probes/shvdn): P-SL-01 save/load signals,
               P-SL-02 save-anchor carrier, P-ID-01 decorator/handle survival, P-DB-01 SQLite reload;
-              compile-check vs ScriptHookVDotNet3 3.6.0 NuGet (net48)
+              compile-check vs ScriptHookVDotNet3 3.6.0 NuGet (net48) -> both Build succeeded, 0 warnings.
+              NOT executed (no GTA). Procedure + pass criteria: phase0-probes/README-PROBES.md.
+              New evidence E6 (shadow copy + SQLitePCLRaw Location-based native lookup), E7.
       [ ] F-d Offline sims (phase0-probes/sim): valuation vectors, heat, NPC gen, journal crash-injection
       [ ] F-e Record results in feasibility.md; save/load decision record
 - [ ] P0-06 Spec documents

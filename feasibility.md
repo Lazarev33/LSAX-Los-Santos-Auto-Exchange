@@ -72,4 +72,22 @@ Full output: `evidence/native_check.txt`, `evidence/save_natives_scan.txt`.
 | E5-3 | `World.GetAllVehicles`, `World.GetNearbyVehicles(pos, r)`, `World.VehicleCount`, `World.VehicleCapacity` exist (memory-pool based). | VERIFIED (source) | `GTA/World.cs` L366–572 |
 | E5-4 | `GTA.Chrono.GameClock` (3.7 API): `Now`, `IsPaused`, `LastTimeMinAdded`, `MillisecondsPerGameMinute`, `AddToCurrentTime`. | VERIFIED (source) | `GTA.Chrono/GameClock.cs` |
 
-(Probes and simulations appended below as they complete.)
+## E6 — Script assembly loading / dependencies (SQLite relevant)
+
+| ID | Finding | Label | Evidence |
+|---|---|---|---|
+| E6-1 | SHVDN creates the script AppDomain with `ShadowCopyFiles="true"`, `ShadowCopyDirectories=scriptPath`, `ApplicationBase=scriptPath`. Script assemblies load via `Assembly.LoadFrom` from a **shadow copy**; `Assembly.Location` therefore points into the shadow-copy cache, not `scripts/`. `AppDomain.CurrentDomain.BaseDirectory` = `scripts/`. | VERIFIED (source) | `source/core/ScriptDomain.cs` L415–433, L650 |
+| E6-2 | Unresolved managed dependencies are resolved by scanning `scripts/` **recursively** and taking the first file whose name ends with `<AssemblyName>.dll` (`EndsWith`, first match). Dependencies may live in `scripts/LSAX/`. Two mods shipping different versions of the same dependency collide (first match wins; no version check on this path). | VERIFIED (source) + OPEN RISK R-COMP-2 | `ScriptDomain.cs` `HandleResolve` ~L2140–2150 |
+| E6-3 | `Microsoft.Data.Sqlite` 8.0.11 on net48 pulls `SQLitePCLRaw.*` 2.1.6 + `System.Memory`, `System.Buffers`, `System.Numerics.Vectors`, `System.Runtime.CompilerServices.Unsafe` (8 managed DLLs) + native `e_sqlite3`. These BCL-extension DLLs are commonly shipped by other mods → R-COMP-2 is concrete. | VERIFIED (build output) | `phase0-probes/shvdn/LsaxPhase0SqliteProbe` build |
+| E6-4 | SQLitePCLRaw.batteries_v2 2.1.6 `NativeLibrary.MakePossibilitiesFor` builds every candidate path from `Assembly.Location` (`runtimes/<rid>/native`, `<dir>/<arch>`, `<dir>`) plus the bare library name. It never uses `CodeBase` or `BaseDirectory`. Combined with E6-1, the default native lookup will search the shadow-copy cache (natives are not shadow-copied) and then the bare name (Windows search order: GTA exe dir, system dirs, PATH). **Expected default result inside SHVDN: native load fails unless e_sqlite3.dll is in the GTA root or already loaded.** | VERIFIED (IL of MakePossibilitiesFor) + expected-failure ASSUMPTION A-DB-3 → P-DB-01 | `il_disasm.py SQLitePCLRaw.batteries_v2.dll MakePossibilitiesFor` |
+| E6-5 | Mitigation (DESIGN DECISION D-DB-3): LSAX pre-loads its native SQLite with `LoadLibraryW(<BaseDirectory>/LSAX/native/x64/e_sqlite3.dll)` once per process before first SQLite use, then verifies the loaded module path. A module already loaded in the process satisfies the bare-name `LoadLibrary`, and survives AppDomain reloads (native modules are process-wide). | DESIGN DECISION; runtime proof → P-DB-01 | — |
+
+## E7 — Disposable probes (compile-verified, NOT run)
+
+| ID | Probe | Status |
+|---|---|---|
+| E7-1 | `phase0-probes/shvdn/LsaxPhase0Probe` (net48, C# 7.3, `TreatWarningsAsErrors`): `SessionSignalProbe` (P-SL-01, passive), `AnchorCarrierProbe` (P-SL-02, opt-in stat writes behind consent phrase), `IdentityProbe` (P-ID-01, opt-in decorator). | VERIFIED (compile) against ScriptHookVDotNet3 **3.6.0** NuGet reference: `dotnet build -c Release` → Build succeeded, 0 warnings. References only mscorlib, SHVDN3 3.6.0, System, System.Core, System.Windows.Forms. 3.7-only `DecoratorInterface.IsLocked` is reached via reflection. |
+| E7-2 | `phase0-probes/shvdn/LsaxPhase0SqliteProbe` (P-DB-01, opt-in). | VERIFIED (compile). A Windows deployment build must set `RuntimeIdentifier=win-x64` (the Linux build copied only linux natives). |
+| E7-3 | None of the probes has been executed. Their outputs are the exact experiments required before Stage 1 (see LSAX-SAVELOAD-FEASIBILITY.md §6). | BLOCKER B-01 input |
+
+(Simulations appended below as they complete.)
