@@ -39,6 +39,8 @@ import time
 from lsax_ref_math import SplitMix64, derive_seed
 
 EVENT_WINDOW_MS = 2000      # save event <-> file write correlation window (wall ms); only used to REJECT, see poll
+SAVE_GATE = True            # D-SL-18: no transaction may start while a game save is in progress (set False only to
+                            # demonstrate the defect it prevents — regression P0-03/24)
 NEWGAME_P_MAX = 60_000      # A-SL-13
 EMPTY = "EMPTY"             # state key of "no LSAX commits"
 
@@ -57,6 +59,8 @@ class Gta:
         self.session = 1
         self.ped_token = None      # LSAX session decorator on the current player ped (runtime only)
         self.save_events = []      # wall times of game save events not yet consumed by LSAX
+        self.save_in_progress = False   # save-event signal (A-SL-12): raised at the snapshot, cleared after the write
+        self.pending_writes = []        # asynchronous saves: (slot, snapshot) taken but not yet written
 
     @property
     def cash(self):
@@ -78,10 +82,24 @@ class Gta:
         return dict(P=self.stat_p(), cash=self.cash, wallets=tuple(self.wallets), char=self.char,
                     garage=frozenset(self.garage), applied=tuple(self.applied), ver=self.ver, mtime=self.W, source=source)
 
-    def save(self, slot):
-        """A genuine game save: writes the file and raises the observable save event (A-SL-12)."""
+    def save(self, slot, async_write=False):
+        """A genuine game save: snapshot, file write and observable save event (A-SL-12). With async_write the
+        snapshot is taken now and the file is written later (complete_writes); the signal stays raised meanwhile."""
+        if async_write:
+            self.pending_writes.append((slot, self._snapshot("GAME")))
+            self.save_in_progress = True
+            return
         self.slots[slot] = self._snapshot("GAME")
         self.save_events.append(self.W)
+
+    def complete_writes(self):
+        for slot, snap in self.pending_writes:
+            snap = dict(snap)
+            snap["mtime"] = self.W
+            self.slots[slot] = snap
+            self.save_events.append(self.W)
+        self.pending_writes = []
+        self.save_in_progress = False
 
     def copy_foreign(self, slot, P, wallets, garage=(), applied=()):
         """A file copied into the profile folder (download, other install, editor). No save event."""
@@ -103,6 +121,7 @@ class Gta:
         self.ped_token = None
 
     def load(self, slot):
+        self.complete_writes()                  # the game finishes a save before it can load
         s = self.slots[slot]
         wallets = s.get("wallets") or tuple([s["cash"]] + self.wallets[1:])
         self.P, self.garage, self.applied = s["P"], set(s["garage"]), list(s["applied"])
@@ -111,11 +130,13 @@ class Gta:
         self._new_session()
 
     def new_game(self):
+        self.complete_writes()
         self.P, self.wallets, self.char, self.garage, self.applied = 1, [200_000, 150_000, 100_000], 0, set(), []
         self.W += 20_000
         self._new_session()
 
     def process_crash(self):
+        self.pending_writes, self.save_in_progress = [], False   # an interrupted write leaves the file unchanged
         self.proc += 1
         self.W += 60_000
         self._new_session()
@@ -162,6 +183,7 @@ class Lsax:
         self.mem_apply = {}                    # in-memory apply status of this instance's pending txn
         self.p_last = None                     # highest play-time observed live in this session (flushed on stop)
         self.p_prev = self.w_prev = None       # poll bracket: P and wallets at the previous poll / own write
+        self.sig_since = None                  # (P, wallets) at the last poll BEFORE the save signal was first seen
         gta.save_events.clear()                # events raised while LSAX was down cannot be correlated
         if first_run:
             self._first_run()
@@ -271,6 +293,8 @@ class Lsax:
             return
         if g.ped_token is None:
             g.ped_token = self.rt("session_token")
+        if g.save_in_progress and self.sig_since is None:
+            self.sig_since = (self.p_prev, self.w_prev)    # the snapshot happened after the previous poll (D-SL-17)
         self.poll_slots()
 
     def close(self, clean):
@@ -301,10 +325,12 @@ class Lsax:
             if kind is not None:                         # byte-identical to content LSAX already knows
                 status, reason = ("PRE_INSTALL" if kind == "PRE_INSTALL" else "TRUSTED"), "KNOWN_CONTENT"
             elif len(near_events) == 1 and not rivals and self.p_prev is not None:
-                # The file was written between the previous poll and now: P_file in [p_prev, P] (A-SL-6 monotonic).
-                # Wallets are recorded only if unchanged across the bracket (A-SL-14); otherwise unknown (NULL).
-                w = W if self.w_prev == W else (None, None, None)
-                head, p_lo = self.head(), self.p_prev
+                # The snapshot happened after the last poll before the save signal was first seen (or, without a
+                # signal seen while running, after the previous poll): P_file in [p_lo, P] (A-SL-6 monotonic).
+                # Wallets are recorded only if unchanged across that bracket (A-SL-14); otherwise unknown (NULL).
+                p_lo, w_lo = self.sig_since if self.sig_since is not None else (self.p_prev, self.w_prev)
+                w = W if w_lo == W else (None, None, None)
+                head = self.head()
                 self.tx(lambda: (self.db.execute("INSERT OR IGNORE INTO save_ledger VALUES(?,'OBSERVED',?,?,?,?,?,?)",
                                                  (s["ver"], head, p_lo, P) + tuple(w)),
                                  self.set_rt("p_last", max(P, self.rt("p_last") or 0))))
@@ -318,6 +344,8 @@ class Lsax:
         for slot, in self.db.execute("SELECT slot FROM slot_state").fetchall():
             if slot not in g.slots:
                 self.tx(lambda: self.db.execute("DELETE FROM slot_state WHERE slot=?", (slot,)))
+        if not g.save_in_progress and not g.pending_writes:
+            self.sig_since = None
         self._observe(P, W)
 
     def _scan_unobserved(self, reason_new):
@@ -348,6 +376,9 @@ class Lsax:
             return "DUPLICATE"
         if self.q1("SELECT 1 FROM reservation WHERE vehicle_id=?", (vid,)):
             return "RESERVED_CONFLICT"
+        if SAVE_GATE and g.save_in_progress:    # D-SL-18: the head must not move between a snapshot and its file
+            self.bump("deferred_save_in_progress")
+            return "DEFERRED_SAVE_IN_PROGRESS"
         owned = self.projection()
         if (kind == "BUY" and (vid in owned or g.cash < price)) or (kind == "SELL" and vid not in owned):
             return "REJECTED"
@@ -553,10 +584,10 @@ def truthful_resolution(lx, g):
 
 
 # ======================================================================================= random episode driver
-ADVERSARIAL = [("BUY", 26), ("SELL", 18), ("EXT", 12), ("EXT_COLLIDE", 4), ("SAVE", 12), ("SAVE_THEN_EXT", 2), ("LOAD", 9),
+ADVERSARIAL = [("BUY", 26), ("SELL", 18), ("EXT", 12), ("EXT_COLLIDE", 4), ("SAVE", 9), ("SAVE_ASYNC", 3), ("SAVE_THEN_EXT", 2), ("LOAD", 9),
                ("DUP", 4), ("DOUBLE", 3), ("CRASH", 8), ("SWITCH", 2), ("COPY_FOREIGN", 2), ("RESTORE_COPY", 2),
                ("NEW_GAME", 1)]
-REALISTIC = [("BUY", 25), ("SELL", 20), ("EXT", 34), ("SAVE", 10), ("LOAD", 2), ("DUP", 4), ("DOUBLE", 3), ("CRASH", 1), ("SWITCH", 1)]
+REALISTIC = [("BUY", 25), ("SELL", 20), ("EXT", 34), ("SAVE", 7), ("SAVE_ASYNC", 3), ("LOAD", 2), ("DUP", 4), ("DOUBLE", 3), ("CRASH", 1), ("SWITCH", 1)]
 OFFLINE_OPS = [("EXT", 3), ("EXT_COLLIDE", 2), ("SAVE", 2), ("COPY_FOREIGN", 1), ("RESTORE_COPY", 1), ("LOAD", 2),
                ("NEW_GAME", 1), ("SWITCH", 1), ("RESTART", 3), ("GAMECRASH", 1)]
 CRASH_POINTS = [("C0", 1), ("C1", 1), ("CA", 1), ("CB", 1), ("C2", 1), ("C3", 1)]
@@ -626,6 +657,11 @@ def episode(seed, gran, ops=160, mix=ADVERSARIAL, preinstall=True):
                 check(f"resolved@{i}")
             continue
         g.advance(rng.range_incl(1, 1500))
+        if g.pending_writes and rng.chance_bp(5000):    # an asynchronous save's file write completes
+            for slot, snap in g.pending_writes:
+                history.append(dict(snap))
+            history[:] = history[-12:]
+            g.complete_writes()
         if not up:                                      # LSAX offline: the game keeps running without LSAX
             op = rng.pick_weighted(OFFLINE_OPS)
             if op in ("EXT", "EXT_COLLIDE"):
@@ -671,6 +707,8 @@ def episode(seed, gran, ops=160, mix=ADVERSARIAL, preinstall=True):
                     lx.submit("SELL", owned[rng.below(len(owned))], rng.range_incl(3, 50) * 1000, f"k{nxt}", f"t{nxt}", crash_at)
             elif op in ("EXT", "EXT_COLLIDE"):
                 ext_cash(op == "EXT_COLLIDE")
+            elif op == "SAVE_ASYNC":
+                g.save(rng.below(4), async_write=True)
             elif op in ("SAVE", "SAVE_THEN_EXT"):
                 slot = rng.below(4)
                 g.save(slot)
@@ -728,7 +766,7 @@ def episode(seed, gran, ops=160, mix=ADVERSARIAL, preinstall=True):
 REQUIRED_PATHS = ["roll_forward_on_own_evidence", "abort_on_own_evidence", "anchored_continuation", "anchored_slot",
                   "abort_slot_anchored", "reconcile_PENDING_UNKNOWN", "reconcile_UNTRUSTED_PRESENT", "reconcile_NO_MATCH",
                   "reconcile_AMBIGUOUS", "reconcile_MISSED_START", "reconcile_SESSION_UNPROVEN", "reconcile_persisted",
-                  "resolved_candidate", "resolved_new_campaign", "ledger_wallets_unknown"]
+                  "resolved_candidate", "resolved_new_campaign", "ledger_wallets_unknown", "deferred_save_in_progress"]
 
 
 def main():

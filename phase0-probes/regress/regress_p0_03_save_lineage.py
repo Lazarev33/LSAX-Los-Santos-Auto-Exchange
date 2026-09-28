@@ -310,6 +310,62 @@ def run():
     s.check("22 resolution by explicit player choice restores consistency",
             w.outcome() == "ANCHORED" and w.consistent() and w.st.get("resolved_candidate", 0) == before + 1)
 
+    # 24 asynchronous save (snapshot now, file written later): a transaction during the write is deferred (D-SL-18)
+    import journal_timeline_ref as J
+    w = World()
+    t1 = w.buy(); w.play()
+    w.g.save(0, async_write=True)                          # snapshot contains t1 only
+    w.play()
+    r = w.lx.submit("BUY", "vA", 10_000, "kA", "tA")
+    s.check("24 transaction attempted while a save is in progress -> DEFERRED", r == "DEFERRED_SAVE_IN_PROGRESS", r)
+    w.g.advance(700); w.g.complete_writes(); w.play()
+    head_row = w.lx.q1("SELECT head_txn FROM save_ledger WHERE kind='OBSERVED' ORDER BY p_hi DESC")
+    s.check("24 ledger head of the async save == head at the snapshot", head_row == t1, head_row)
+    w.buy(); w.stop(); w.g.process_crash(); w.g.load(0); w.start()
+    expect_anchor(s, "24 load of the async save anchors correctly", w)
+    # 24b the same sequence with the gate disabled reproduces the defect the gate prevents
+    J.SAVE_GATE = False
+    try:
+        w = World()
+        w.buy(); w.play()
+        w.g.save(0, async_write=True)
+        w.play()
+        r = w.lx.submit("BUY", "vA", 10_000, "kA", "tA")    # applied between the snapshot and the file write
+        w.g.advance(700); w.g.complete_writes(); w.play()
+        w.stop(); w.g.process_crash(); w.g.load(0); w.start()
+        defect = w.outcome() == "ANCHORED" and not w.consistent()
+    finally:
+        J.SAVE_GATE = True
+    s.check("24b without the gate the file is attributed to a later head (defect reproduced; gate is necessary)", defect)
+
+    # 25 asynchronous save whose snapshot precedes an intermediate poll: the bracket starts at the last poll before
+    #    the save signal was first seen, so the true file is not excluded
+    w = World()
+    t1 = w.buy(); w.play()
+    w.g.save(1, async_write=True)
+    for _ in range(3):
+        w.play(900)                                          # several polls while the write is pending
+    w.g.complete_writes(); w.play()
+    row = w.lx.db.execute("SELECT head_txn, p_lo, p_hi FROM save_ledger WHERE kind='OBSERVED' ORDER BY p_hi DESC").fetchone()
+    snap_p = w.g.slots[1]["P"]
+    s.check("25 bracket of an async save contains the snapshot play-time", row[1] <= snap_p <= row[2], (row, snap_p))
+    w.buy(); w.stop(); w.g.process_crash(); w.g.load(1); w.start()
+    expect_anchor(s, "25 load of an async save with intermediate polls anchors", w)
+    s.check("25 anchored at the snapshot head", w.lx.head() == t1)
+
+    # 26 random adversarial histories with asynchronous saves: gate on -> 0 violations; gate off -> violations
+    from lsax_ref_math import derive_seed
+    counts = {}
+    for gate in (True, False):
+        J.SAVE_GATE = gate
+        try:
+            counts[gate] = sum(sum(1 for x in J.episode(derive_seed("gate-check", e), 1000, ops=160, mix=J.ADVERSARIAL)[1]
+                                   if x.startswith("I0")) for e in range(20))
+        finally:
+            J.SAVE_GATE = True
+    s.check("26 random async-save histories: gate on -> 0 I0 violations", counts[True] == 0, counts)
+    s.check("26 random async-save histories: gate off -> violations (non-vacuity of the gate)", counts[False] > 0, counts)
+
     # 23 residual outside TM-1 (documented, not a safety PASS): the loaded foreign file is swapped back to trusted
     #    bytes before LSAX's startup scan (violates A-SL-8) AND reproduces the trusted fingerprint exactly.
     w = World()

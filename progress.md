@@ -208,6 +208,11 @@ the audited branch `claude/focused-thompson-ilnspm`, DRAFT1 files, PR #1 or `mai
       failures, full coverage; realistic RECONCILE 17.1-18.3 %). feasibility.md E9-1..E9-12 added; SAVELOAD §5,
       RISK-REGISTER/risks R-SL-3/R-SL-5 updated to audit-grade numbers.
 - [ ] C0-15 Review/prepare P-SL-01 and P-DB-01
+      (in progress) Self-found while mapping the probe to the assumptions (recorded in the ledger below):
+      SF-4 asynchronous save write lets a transaction land between snapshot and file -> wrong ledger head
+      (model: 31 I0 violations / 30 episodes) -> D-SL-18 save-in-progress gate; SF-5 bracket started at the poll
+      before the file change could exclude the true file -> D-SL-17 amended (pre-signal bracket). Model gained
+      SAVE_ASYNC; regress_p0_03 now 26 cases / 84 checks PASS; A-SL-12 strengthened; PC-4/PC-8 criteria updated.
 - [ ] C0-16 Full xref/static/spec self-audit
 - [ ] C0-17 Rebuild DRAFT2 package and hashes
 - [ ] C0-18 Push correction branch
@@ -228,3 +233,5 @@ the audited branch `claude/focused-thompson-ilnspm`, DRAFT1 files, PR #1 or `mai
 | P1-05 | SOURCE VERIFIED: NPC-GEN L17 and DOMAIN L69 `(campaign_seed, market_day, segment, slot)`; MASTER §11 market step every 60 MT min (24 steps/day); slot scope undefined. REPRODUCED with baseline `npcgen_ref.generate` + `derive_seed("vehicle",…)`: two steps of MT day 42 with step-local slots 0..2 → 3/3 identical VehicleIds and byte-identical vehicles. Also observed: raw FNV-1a ids differ only in a few hex digits (weak avalanche) → correction uses a mixing finaliser | CORRECTED (C0-10): D-GEN-6 injective identity; regress_p1_05_npc_identity 17/17 PASS |
 | P1-06 | SOURCE VERIFIED: DOMAIN L191 LEGACY "treated as CLEAN / eligible", L203; TSM L104; MASTER L190. Additional (self-found): DOMAIN title diagram `UNKNOWN --> CLEAN: title verification passed` — verification only checks STOLEN records, so a pre-LSAX/unobserved theft also launders | CORRECTED (C0-11): D-PROV-1; regress_p1_06_legacy 75/75 PASS |
 | P2-01 | SOURCE VERIFIED: DB-SCHEMA L127 "online backup API … (projection tables only)"; the backup API copies a whole database (schema), not tables | CORRECTED (C0-12): D-DB-4 two files + proj-schema backup; regress_p2_01_backup 11/11 PASS |
+| SF-4 (self-found, C0-15) | REPRODUCED in the model: asynchronous save write + transaction between snapshot and write → ledger head after the transaction → wrong anchoring (31 I0 violations in 30 adversarial episodes with the gate off) | CORRECTED: D-SL-18 save-in-progress gate; regress_p0_03 cases 24/24b/26 |
+| SF-5 (self-found, C0-15) | REPRODUCED in the model: bracket lower bound at the poll before the file change excludes an async save's own play-time → wrong exclusion → wrong state accepted | CORRECTED: D-SL-17 amended (bracket starts at the last poll before the save signal); regress_p0_03 case 25 |

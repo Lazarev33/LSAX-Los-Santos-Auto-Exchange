@@ -2,11 +2,11 @@
 
 Document: LSAX-SAVELOAD-FEASIBILITY.md · Spec: LSAX MASTER SPEC v1.0 DRAFT2 · Status: DRAFT for independent re-audit
 
-DRAFT2 change summary (Correction Pass 1, findings P0-01/P0-02/P0-03): wallet equality is no longer evidence that
+DRAFT2 change summary (Correction Pass 1, findings P0-01/P0-02/P0-03, self-found SF-4/SF-5): wallet equality is no longer evidence that
 a transaction was applied; files that changed while LSAX was not observing them are UNTRUSTED; INFERRED/ghost
 downtime lineage is removed; continuation requires a session token instead of play-time/wallet correlation; slot
-anchoring is hypothesis exclusion (correlation may exclude, never include). Decisions D-SL-13…D-SL-17, D-TX-4,
-D-TX-5 (decisions.md).
+anchoring is hypothesis exclusion (correlation may exclude, never include); no transaction starts while a save is in
+progress. Decisions D-SL-13…D-SL-18, D-TX-4, D-TX-5 (decisions.md).
 
 ## 0. Status in one paragraph
 
@@ -49,7 +49,7 @@ synchronisation model:
 | S12 | `GET_GAME_TIMER` across load | unknown | not assumed | not used for anchoring |
 | S13 | SHVDN main-thread blocking while scripts run → one LSAX tick is not interleaved with a GTA save snapshot | `DllMain.cpp` comment/code (E1-8) | VERIFIED (source); ASSUMPTION A-SL-4 at runtime | single-tick transaction core |
 | S14 | Session token: an int decorator on the player ped set by LSAX; survives script-domain reloads within a game session, never survives a load / new game / new process | DECOR natives exist (E4-1); SHVDN decorator API present (E5); behaviour across reload/load unknown | ASSUMPTION A-SL-10 | the **only** continuation evidence (PC-5, PC-7) |
-| S15 | Game save event observable (S10 flags and/or save-UI state) within 2 s of every game save; a file copy raises none | none | ASSUMPTION A-SL-12 | corroborates an OBSERVED ledger row (PC-4) |
+| S15 | Game save-event signal observable (S10 flags and/or save-UI state) from no later than the snapshot until the file write; a file copy raises none | none | ASSUMPTION A-SL-12 | corroborates an OBSERVED ledger row; drives the save gate and the bracket start (PC-4, PC-8) |
 | S16 | Process identity: `Process.GetCurrentProcess()` Id + StartTime; SHVDN runs inside the game process | .NET BCL; ASI loading (E1) | VERIFIED (source/BCL) | excludes the LIVE hypothesis after a game restart |
 | S17 | Loaded file still present and unchanged when LSAX's startup scan runs; GTA loads only profile slot files | none | ASSUMPTION A-SL-8 | hypothesis enumeration is exhaustive (PC-8) |
 
@@ -95,8 +95,13 @@ hypothesis (a mismatch proves "the world was not loaded from that file", given A
 ### 4.2 Ledger maintenance (while LSAX runs and is not in RECONCILE)
 
 - Poll slot-file metadata every 2 s wall, every tick while a save-event signal is active, and immediately before
-  every transaction apply (≤ 16 files; hash only files whose size/mtime changed). The poll keeps a **bracket**:
-  play-time and wallet vector at the previous poll; LSAX's own wallet writes restart the wallet bracket (D-SL-17).
+  every transaction apply (≤ 16 files; hash only files whose size/mtime changed). The poll keeps a **bracket**
+  (D-SL-17): its lower end is the play-time and wallet vector at the last poll **before the save-event signal was
+  first seen** (the snapshot happened after it), or at the previous poll if no signal was seen while running; LSAX's
+  own wallet writes restart the wallet bracket.
+- **Save-in-progress gate (D-SL-18):** while the save-event signal is active no transaction starts (deferred, never
+  dropped). The LSAX head therefore cannot change between a snapshot and the observation of its file, even when GTA
+  writes the file asynchronously after the snapshot.
 - A changed file is **TRUSTED(KNOWN_CONTENT)** if its hash is already in the ledger (byte-identical restore).
 - Else it is **TRUSTED(OBSERVED)** only if exactly one game save event (S15) lies within ±2 s of the file write and
   no other changed file competes for it. The new ledger row records `head_txn = active head`, `p_lo = P at previous
@@ -147,7 +152,8 @@ Why each rule is sound (and what it costs):
 |---|---|---|
 | Token ⇒ continuation | a load/new game/new process destroys all entities, so an equal token proves no load happened since LSAX last anchored (A-SL-10) | none |
 | UNTRUSTED ⇒ unknown | the content of an unobserved file is unknown; its LSAX history cannot be derived from play-time or wallets | every token-less start refuses while an UNTRUSTED file exists, until the player overwrites it with an observed save or resolves (R-SL-3) |
-| Bracket exclusion | the file was written between two polls and play-time is non-decreasing within a session (A-SL-6); a load restores it exactly | none |
+| Bracket exclusion | the snapshot happened after the last poll before its save signal was first seen, and play-time is non-decreasing within a session (A-SL-6, A-SL-12); a load restores it exactly | none |
+| Save gate | no transaction starts while a save is in progress, so the ledger head is the snapshot's head (D-SL-18) | transactions wait for the save to finish (seconds) |
 | Wallet exclusion | wallets unchanged across the bracket (A-SL-14) ⇒ they are the file's wallets; a load restores them exactly (A-SL-5) | unknown wallets ⇒ play-time exclusion only |
 | LIVE hypothesis | a token can be lost without a load (character switched while LSAX was not running); such a live world has P ≥ p_last | forward loads across branches in the same process refuse (AMBIGUOUS) |
 | MISSED_START | a load LSAX did not see may have been followed by play that crosses another file's fingerprint | rare (LSAX start failures only) |
@@ -222,7 +228,7 @@ LSAX-PERFORMANCE-BUDGET.md.
 |---|---|---|
 | Audit counterexamples A (P0-02) and B (P0-03) no longer commit unsafe history | VERIFIED (sim) | `regress_audit_repro.py` runs the auditor's script byte-identical: A → RECONCILE(PENDING_UNKNOWN), B → RECONCILE(UNTRUSTED_PRESENT) |
 | Wallet equality never decides a recovery | VERIFIED (sim) | `regress_p0_02_txn_recovery.py`: 432 scenarios (BUY/SELL × 3 wallets × C1/CA/CB/C2 × 5 stop modes × 3 external-cash variants, + after-load variants); decision identical across wallet variants; roll-forward only on own APPLIED evidence + token |
-| Unobserved / foreign files never become lineage; legitimate continuation and rollback still anchor | VERIFIED (sim) | `regress_p0_03_save_lineage.py`: 23 cases incl. copied foreign/older/newer, play-time and wallet collisions, forged fingerprint, multiple slots, repeated restart, continuation, rollback, missed start, pre-install, new game |
+| Unobserved / foreign files never become lineage; legitimate continuation and rollback still anchor | VERIFIED (sim) | `regress_p0_03_save_lineage.py`: 26 cases (84 checks) incl. copied foreign/older/newer, play-time and wallet collisions, forged fingerprint, multiple slots, repeated restart, continuation, rollback, missed start, pre-install, new game, asynchronous save writes (gate on: correct; gate off: defect reproduced) |
 | Model D keeps LSAX state = effects present in the loaded world, or refuses, under random adversarial histories | VERIFIED (sim) | `journal_timeline_ref.py --episodes 200` (audit grade, `evidence/sim/journal_timeline_ref.out.md`): 800 episodes, 4 522 injected crashes (C0/C1/CA/CB/C2/C3), 90 missed script-domain starts, 23 415 observed saves; 7 060 automatic anchorings after the first run (1 479 continuation, 5 581 slot), 281 own-evidence roll-forwards, 340 own-evidence aborts, 665 slot-anchored aborts; **0 safety-invariant failures**; every recovery/refusal path exercised (coverage tripwire); 159 s |
 | RECONCILE frequency acceptable | **OPEN (R-SL-3)** | sim audit grade (200 episodes per mix × granularity): realistic mix 18.3 % (G = 1 ms) / 17.1 % (G = 1 s) of non-first session starts refuse — driven by the crash-heavy mix (every injected crash lands inside a transaction), pre-install / unobserved files and forward loads in the same process; adversarial 58.2–58.3 % (default 60-episode run: 15.2 % / 16.7 %) |
 | Load detection, cash restore, play-time stat, file observability, save events, token semantics | **BLOCKER B-01** | §6 |
@@ -239,11 +245,11 @@ PC-7 and PC-8 all pass 10/10 on the target runtime**, and P-DB-01 passes. PC-6 i
 | PC-1 | A-SL-1, A-SL-9 | every load path (pause-menu load, mission-fail load if any, new game, game start) produces a new script-domain CTOR; death/arrest/switch/mission retry-in-place produce none |
 | PC-2 | A-SL-6, A-SL-13 | a play-time stat exists; after every load it equals the loaded file's save-time value exactly (bracket from the probe's own polls contains it); non-decreasing within a session through pause, loading, switch, fades, sleep; ≤ 60 000 ms at the first tick of a new game; granularity G recorded |
 | PC-3 | A-SL-5 | `SP0/1/2_TOTAL_CASH` after every load equal the save-time values recorded by the probe (all three, incl. non-active protagonists) |
-| PC-4 | A-SL-7, A-SL-12, A-SL-4 | every save kind (bed, phone quick-save, mission autosave, autosave) changes exactly one slot file within 2 s and raises the save-event signal within ±2 s of the write; copying/restoring a file raises none; no save file write occurs between the probe's tick-start and tick-end markers |
+| PC-4 | A-SL-7, A-SL-12, A-SL-4 | every save kind (bed, phone quick-save, mission autosave, autosave) changes exactly one slot file; the save-event signal is active in the tick before the file change is detected and the change is detected ≤ 2 s after the signal clears; copying/restoring a file raises no signal; no save file change is detected between the probe's tick-start and tick-end markers |
 | PC-5 | A-SL-10 | the token decorator on the player ped survives console `Reload` and script-exception restarts (10/10) and is absent after every load, new game and game restart (10/10 each) |
 | PC-6 | A-SL-3 | informative: whether `Aborted` sees pre- or post-load state |
 | PC-7 | A-SL-10 | decorator registration succeeds at probe start; set/get round-trips on the player ped; after a character switch the new ped has no token and a re-tag succeeds |
-| PC-8 | A-SL-8, A-SL-14 | for every load: exactly one present slot file's probe-recorded fingerprint (bracket + wallets) matches the loaded world; its hash is unchanged at the probe's start; on the full modpack, no wallet change and restore is observed between two consecutive probe ticks |
+| PC-8 | A-SL-8, A-SL-12, A-SL-14 | for every load: the loaded world's play-time lies inside the probe-recorded pre-signal bracket of exactly one present slot file and its wallets equal that file's recorded wallets (when recorded); that file's hash is unchanged at the probe's start; on the full modpack, no wallet change and restore is observed between two consecutive probe ticks |
 
 Also run **P-DB-01** (SQLite load/reload, attach + online backup of the projection DB; R-DB-1/2, D-DB-4).
 
@@ -263,7 +269,8 @@ Also run **P-DB-01** (SQLite load/reload, attach + online backup of the projecti
 - **Context:** §1–§2. No slot identity signal exists (S11). DRAFT1 accepted continuation and PREPARED recovery on
   play-time/wallet correlation (audit P0-02, P0-03).
 - **Decision:** Model D "Anchored Timeline" with content-identified save ledger (D-SL-13), session-token
-  continuation (D-SL-14), hypothesis-exclusion anchoring (D-SL-15/16), poll brackets (D-SL-17), own-evidence
+  continuation (D-SL-14), hypothesis-exclusion anchoring (D-SL-15/16), pre-signal poll brackets (D-SL-17), the
+  save-in-progress gate (D-SL-18), own-evidence
   transaction recovery (D-TX-4/5), always-fork, RECONCILE_REQUIRED with explicit player resolution.
 - **Alternatives rejected:** A (no slot id), C alone (money exploit), B alone (needs the same anchor); DRAFT1
   INFERRED/ghost downtime lineage and wallet evidence (correlation, audit P0-02/P0-03); a STANDARD policy that
@@ -290,7 +297,7 @@ Also run **P-DB-01** (SQLite load/reload, attach + online backup of the projecti
 | A-SL-8 | GTA loads only profile slot files; the loaded file is unchanged at LSAX's startup scan | P-SL-01 PC-8 |
 | A-SL-9 | LSAX is constructed at every script-domain start; a failed start can write MISSED_START | source (ScriptDomain) + P-SL-01 PC-1 |
 | A-SL-10 | the session-token decorator survives reloads within a session and never survives load/new game/new process | P-SL-01 PC-5, PC-7 |
-| A-SL-12 | every game save raises an observable save event within ±2 s of the file write; a copy raises none | P-SL-01 PC-4 |
+| A-SL-12 | every game save raises an observable save-event signal that is active from no later than the snapshot until the file write is observable (and within ±2 s of the write); a copy raises none | P-SL-01 PC-4 (signal vs file timing), PC-8 (snapshot play-time inside the probe's pre-signal bracket) |
 | A-SL-13 | a new game starts with play-time ≤ 60 000 ms at LSAX's first tick | P-SL-01 PC-2 |
 | A-SL-14 | no other mod changes a wallet and restores it strictly between two LSAX polls | P-SL-01 PC-8 (full modpack) |
 | A-ENV-1 | user's SHVDN 3.7.x lifecycle code equals pinned source | P-SL-01 logs version |

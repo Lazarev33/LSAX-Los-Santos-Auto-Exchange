@@ -95,7 +95,9 @@ double replay, branch regeneration, ordering gate, coalescing rule; plus market-
 
 All steps run in **one LSAX tick** on the script thread:
 
-1. **Gate:** not RECONCILE_REQUIRED; acting party has a defined wallet (protagonist model); no pending PREPARED txn.
+1. **Gate:** not RECONCILE_REQUIRED; not FAULT; acting party has a defined wallet (protagonist model); no pending
+   PREPARED txn; **no game save in progress** (save-event signal inactive — D-SL-18; the intent is deferred to a later
+   tick, never dropped).
 2. **Precommit validation** (§6) against the current projection; idempotency check. Failure → `REJECTED`
    (audit log only, nothing durable in the journal).
 3. **PREPARE** (synchronous SQLite commit): txn row `state=PREPARED`, **`apply_status=APPLYING`** (durable
@@ -257,6 +259,7 @@ value, including exactly `wallet_before` or `wallet_after` — they change no ve
 | In-session load of an older TRUSTED save | nothing | ABORT | ABORT | ABORT | rewind; orphaned commit; key may be re-used |
 | Load of a save written while LSAX was down (after the apply) | — | RECONCILE(UNTRUSTED_PRESENT) | RECONCILE(UNTRUSTED_PRESENT) | RECONCILE(UNTRUSTED_PRESENT) | — |
 | Save written between PREPARE and apply | impossible (same tick, A-SL-4) | impossible | impossible | impossible | — |
+| Transaction requested while a save is in progress (snapshot taken, file not yet written) | deferred before PREPARE (D-SL-18) | — | — | — | — |
 | COMMIT write fails after apply | — | — | — | compensate + ABORT, else FAULT (step 6) | — |
 | Deal interrupted before COMMITTING | no money moved; deal → INTERRUPTED/CANCELLED | | | | |
 | Deal interrupted in DELIVERY | money committed; DELIVERY_PENDING → retry → storage fallback | | | | |
