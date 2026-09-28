@@ -25,7 +25,7 @@ SPEC_APPROVED; only a later independent reviewer may.
 |---|---|
 | Solution builds reproducibly: `LSAX.Core` (netstandard2.0, no SHVDN/UI refs), `LSAX.Persistence`, `LSAX.Adapters.Shvdn` (net48), `LSAX.Localization`, `LSAX.Diagnostics` | two clean builds → identical assembly hashes (deterministic build) |
 | Core purity | reference graph check: `LSAX.Core` references only BCL (T-ARCH-1) |
-| VehicleId/LsaxVin, fingerprint scoring, lossless candidate search, collision matrix, handle-reuse safety | T-ID-1, T-ID-2 green; 20/20 collision rows; identity regressions (P1-01/P1-02) ported and green |
+| VehicleId/LsaxVin, fingerprint scoring, lossless candidate search, collision matrix, handle-reuse safety | T-ID-1, T-ID-2, T-ID-3 green; 22/22 collision rows; identity regressions (P1-01/P1-02) ported and green |
 | TimeService AT/MT, skip-credit durability | T-TIME-1, T-TIME-2 green; time regressions (P1-03) ported and green |
 | SQLite layer, schema v1, migrations framework, journal + projection DB + projection backup | T-DB-1..5 green; P-DB-01 PASS on target PC (already required for SPEC_APPROVED) |
 | Transaction-core skeleton (no market) incl. system transactions | T-TX-1..3 green; P0-02 and P1-04 regressions ported and green |

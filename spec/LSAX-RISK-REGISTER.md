@@ -36,7 +36,7 @@ P0/P1. Only disposable probes (`phase0-probes/`) and Phase-0 corrections are all
 | R-SL-6 | ASSUMPTION A-SL-4 | a save snapshot could interleave an LSAX tick | source evidence E1-8; fallback: skip apply while save flags active | T-SL runtime crash tests |
 | R-DB-3 | OPEN RISK | leaked connection locks DB after reload | close in `Aborted`; busy_timeout | P-DB-01 step 4 |
 | R-ID-2 | OPEN RISK | decorators lost on recreation | hint only | P-ID-01 hit-rate recorded |
-| R-ID-3 | OPEN RISK | decorator unlock fails on a game build | fast path optional | feature flag |
+| R-ID-3 | OPEN RISK | decorator unlock fails on a game build | decorator is an ordering hint only; identity results unchanged without it | feature flag |
 | R-ID-5 | ACCEPTED LIMITATION | trainer clone spawned while the original is Dormant can bind first (C9) | no value duplication (one VehicleId/title); original becomes AMBIGUOUS | documented |
 | R-ECO-2 | OPEN RISK | underground income ceiling (sim ≈ $37.6k/MT day at $20k FMV) mis-balanced | tunable constants; Stage 9 economy sim | band decided (OD-2) |
 | R-VAL-1 | ASSUMPTION A-VAL-1 | `GET_VEHICLE_MODEL_VALUE` not usable as MSRP seed for add-ons | catalogue overrides; class defaults | T-COMP-6 report |

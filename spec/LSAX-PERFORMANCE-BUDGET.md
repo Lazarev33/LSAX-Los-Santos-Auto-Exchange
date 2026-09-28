@@ -21,7 +21,7 @@ verifies them on the target PC (T-PERF-*). Hard platform limit: SHVDN aborts a s
 | Active vehicle tracking (player vehicle + ≤ 8 recently driven) | every tick | ≤ 9 vehicles × ≤ 4 natives (position, speed, health) | 0.10 / 0.30 ms |
 | Odometer integration | every tick | arithmetic on tracked vehicles | included above |
 | Local reconciliation scan | every 1 000 ms wall | `World.GetNearbyVehicles(player, 120 m)`, process ≤ 64 nearest; full fingerprint (~40 natives) for ≤ 8 candidates per scan, time-sliced ≤ 2 per tick | 0.50 / 1.00 ms on scan ticks |
-| Binding continuity checks | every tick for Bound (≤ 32) | model + position per bound entity | 0.10 / 0.25 ms |
+| Bound re-observation (D-ID-6) | each Bound entity ≤ every 2 000 ms, time-sliced ≤ 4 per tick | full fingerprint (~40 natives) + lossless decision over K1 (≤ 32 per slice) ∪ K2 (≤ 64) from DB indexes | 0.30 / 0.80 ms |
 | Market simulation step | every 60 MT min (= 2 real min) | worker: ≤ 30 generated vehicles, ≤ 200 listings updated, ≤ 50 offers resolved; main thread only applies results | worker ≤ 50 ms; main 0.20 / 0.50 ms |
 | Persistence enqueue (non-money) | on events | enqueue only | 0.05 / 0.10 ms |
 | **Transaction tick** (atomic core) | ≤ 1 per tick, ≤ 6 per MT min | 2 synchronous fsync'd commits + ≤ 10 natives | **≤ 25 ms p95, ≤ 50 ms max** (allowed spike; R-DB-2) |
@@ -49,7 +49,7 @@ start-up sequence spread over ticks; market and transactions are frozen until it
 |---|---|---|
 | Runtime bindings | 256 | LRU, DORMANT first |
 | Tracked (odometer) vehicles | 9 | least recently driven |
-| Fingerprint cache (per handle, per session) | 128 | LRU; invalidated on continuity break |
+| Fingerprint cache (per handle, per session) | 128 | LRU; scheduling/ordering hint only, never a verdict; overwritten on every observation |
 | Notification queue | 32 | drop oldest low-priority |
 | DB write queue (non-money) | 10 000 items | back-pressure: coalesce odometer checkpoints; never drop money-path jobs |
 | LSAX spawned-entity registry | 16 | released at deal end / abort / session start sweep |

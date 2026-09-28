@@ -35,25 +35,36 @@ CREATE TABLE schema_migration (version INTEGER PRIMARY KEY, applied_wall INTEGER
 CREATE TABLE campaign (campaign_id TEXT PRIMARY KEY, seed INTEGER NOT NULL, created_wall INTEGER NOT NULL,
   created_reason TEXT NOT NULL CHECK (created_reason IN ('FIRST_RUN','NEW_CAMPAIGN_CHOICE')));
 CREATE TABLE timeline (timeline_id INTEGER PRIMARY KEY, campaign_id TEXT NOT NULL REFERENCES campaign,
-  parent_txn TEXT REFERENCES txn(txn_id), fork_p INTEGER NOT NULL, fork_mt INTEGER NOT NULL, last_p INTEGER NOT NULL,
-  reason TEXT NOT NULL CHECK (reason IN ('ROOT','ANCHOR','DOWNTIME','RECOVERY')), created_wall INTEGER NOT NULL);
+  parent_txn TEXT REFERENCES txn(txn_id), fork_p INTEGER NOT NULL, fork_mt INTEGER NOT NULL,
+  reason TEXT NOT NULL CHECK (reason IN ('ROOT','ANCHOR','RESOLVED','NEW_CAMPAIGN')), created_wall INTEGER NOT NULL);
 CREATE TABLE txn (txn_id TEXT PRIMARY KEY, idem_key TEXT NOT NULL, kind TEXT NOT NULL,
-  state TEXT NOT NULL CHECK (state IN ('PREPARED','COMMITTED','ABORTED','RECONCILE')),
+  state TEXT NOT NULL CHECK (state IN ('PREPARED','COMMITTED','ABORTED')),
+  apply_status TEXT NOT NULL CHECK (apply_status IN ('NOT_STARTED','APPLYING','APPLIED')),  -- PREPARE writes APPLYING (D-TX-4)
   actor TEXT NOT NULL, wallet_slot INTEGER CHECK (wallet_slot IN (0,1,2)),
   wallet_before INTEGER, wallet_after INTEGER, p_prepare INTEGER NOT NULL, mt INTEGER NOT NULL,
-  prev_txn TEXT, plan_json TEXT NOT NULL, created_wall INTEGER NOT NULL, resolved_wall INTEGER, resolution TEXT);
+  prev_txn TEXT, plan_json TEXT NOT NULL, created_wall INTEGER NOT NULL, resolved_wall INTEGER,
+  resolution TEXT CHECK (resolution IN ('COMMITTED_IN_TICK','ABORTED_IN_TICK','COMPENSATED','OWN_EVIDENCE_ROLL_FORWARD',
+    'OWN_EVIDENCE_ABORT','ANCHORED_TO_EARLIER_SAVE','PLAYER_CHOICE')));
 CREATE TABLE commit_log (timeline_id INTEGER NOT NULL REFERENCES timeline, seq INTEGER NOT NULL,
   txn_id TEXT NOT NULL UNIQUE REFERENCES txn, idem_key TEXT NOT NULL, p_ms INTEGER NOT NULL, mt INTEGER NOT NULL,
   wallet_before INTEGER, wallet_after INTEGER, PRIMARY KEY (timeline_id, seq));
 CREATE TABLE journal_event (txn_id TEXT NOT NULL REFERENCES txn, ord INTEGER NOT NULL, type TEXT NOT NULL,
   schema_v INTEGER NOT NULL, payload_json TEXT NOT NULL, PRIMARY KEY (txn_id, ord));
 CREATE TABLE reservation (subject TEXT PRIMARY KEY, txn_id TEXT NOT NULL REFERENCES txn);  -- 'veh:<id>' | 'lst:<id>' | 'off:<id>'
-CREATE TABLE slot_ledger (slot_file TEXT PRIMARY KEY, mtime_wall INTEGER NOT NULL, size INTEGER NOT NULL,
-  sha256 TEXT NOT NULL, mode TEXT NOT NULL CHECK (mode IN ('OBSERVED','INFERRED','FOREIGN')),
-  timeline_id INTEGER NOT NULL REFERENCES timeline, p_lo INTEGER NOT NULL, p_hi INTEGER NOT NULL,
-  w0 INTEGER, w1 INTEGER, w2 INTEGER, pending_txn TEXT, observed_wall INTEGER NOT NULL);
+-- save ledger (global, never rewinds; SAVELOAD §4.1/§4.2): positive knowledge of save CONTENT only
+CREATE TABLE save_ledger (sha256 TEXT PRIMARY KEY, kind TEXT NOT NULL CHECK (kind IN ('OBSERVED','PRE_INSTALL')),
+  campaign_id TEXT NOT NULL REFERENCES campaign, head_txn TEXT,              -- NULL = EMPTY state
+  p_lo INTEGER, p_hi INTEGER,                                                -- poll bracket; NULL for PRE_INSTALL
+  w0 INTEGER, w1 INTEGER, w2 INTEGER,                                        -- NULL = wallets unknown (changed in bracket)
+  mt_obs INTEGER, gc_obs INTEGER, observed_wall INTEGER NOT NULL,
+  CHECK ((kind = 'PRE_INSTALL' AND p_lo IS NULL AND head_txn IS NULL) OR (kind = 'OBSERVED' AND p_lo <= p_hi)));
+CREATE TABLE slot_state (slot_file TEXT PRIMARY KEY, mtime_wall INTEGER NOT NULL, size INTEGER NOT NULL,
+  sha256 TEXT NOT NULL, status TEXT NOT NULL CHECK (status IN ('TRUSTED','PRE_INSTALL','UNTRUSTED')),
+  reason TEXT NOT NULL CHECK (reason IN ('OBSERVED','KNOWN_CONTENT','RESTORED_COPY','PRE_INSTALL','CHANGED_WHILE_DOWN',
+    'FOREIGN_WHILE_RUNNING','AMBIGUOUS_EVENT','DURING_RECONCILE')), updated_wall INTEGER NOT NULL);
 CREATE TABLE runtime_state (key TEXT PRIMARY KEY, value TEXT NOT NULL);
-  -- active_timeline, reconcile(0|1, reason), stop_clean, stop_p, stop_w0..2, stop_wall, stop_proc, heartbeat_p, heartbeat_wall
+  -- active_timeline, reconcile (0|1), reconcile_reason, reconcile_candidates, session_token, proc_id, proc_start,
+  -- p_last, stop_clean, missed_start (process identity of a failed start), fault (D-TX-5)
 CREATE TABLE deal (deal_id TEXT PRIMARY KEY, state TEXT NOT NULL, listing_id TEXT, offer_id TEXT, txn_id TEXT,
   hold_expires_mt INTEGER, retry_left INTEGER NOT NULL, params_json TEXT NOT NULL);  -- timeline-coupled via events
 
@@ -72,8 +83,11 @@ CREATE TABLE vehicle_ownership (vehicle_id TEXT PRIMARY KEY REFERENCES vehicle, 
 CREATE TABLE vehicle_registration (vehicle_id TEXT PRIMARY KEY REFERENCES vehicle, plate TEXT NOT NULL,
   plate_style INTEGER NOT NULL, lsax_issued INTEGER NOT NULL CHECK (lsax_issued IN (0,1)));
 CREATE INDEX ix_registration_plate ON vehicle_registration(plate);
-CREATE TABLE vehicle_fingerprint (vehicle_id TEXT PRIMARY KEY REFERENCES vehicle, fp_json TEXT NOT NULL, fp_hash TEXT NOT NULL);
-CREATE INDEX ix_fingerprint_hash ON vehicle_fingerprint(fp_hash);
+CREATE TABLE vehicle_fingerprint (vehicle_id TEXT PRIMARY KEY REFERENCES vehicle, model_hash INTEGER NOT NULL,
+  plate_norm TEXT NOT NULL, colour_sig INTEGER NOT NULL,                     -- 4 colour components packed
+  fp_json TEXT NOT NULL, fp_hash TEXT NOT NULL);
+CREATE INDEX ix_fp_k1 ON vehicle_fingerprint(model_hash, plate_norm);       -- complete K1 (DOMAIN §4.4, D-ID-7)
+CREATE INDEX ix_fp_k2 ON vehicle_fingerprint(model_hash, colour_sig);       -- complete K2 (context filter in memory)
 CREATE TABLE vehicle_condition (vehicle_id TEXT PRIMARY KEY REFERENCES vehicle,
   odo_m INTEGER NOT NULL CHECK (odo_m BETWEEN 0 AND 10000000000),                    -- ≤ 10 million km
   mech INTEGER NOT NULL CHECK (mech BETWEEN 0 AND 1000), body INTEGER NOT NULL CHECK (body BETWEEN 0 AND 1000),

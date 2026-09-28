@@ -35,7 +35,8 @@ Stage gates additionally require the listed L3 runs (LSAX-STAGE-ACCEPTANCE.md).
 | T-TX-1 | idempotency | same key twice on the active path → second returns DUPLICATE with identical outcome, no effect | 100 % |
 | T-TX-2 | validation | each precommit rule (TSM §6) has a failing and a passing case | 100 % |
 | T-TX-3 | state machine | exhaustive transition table: only allowed transitions succeed | 100 % |
-| T-ID-1 | identity scoring | collision matrix C1–C20 as table-driven cases with fake fingerprints | expected state for each row |
+| T-ID-1 | identity scoring | collision matrix C1–C22 as table-driven cases with fake fingerprints | expected state for each row |
+| T-ID-3 | identity safety (P1-01/P1-02) | port of `phase0-probes/regress/regress_p1_01_02_identity.py`: handle reuse H1–H8, >32-candidate cases C1–C5, randomized equality with the unbounded reference | 100 %; 0 automatic binds differing from the reference |
 | T-ID-2 | identity | thresholds: score 85 unique → BIND; 84 → AMBIGUOUS; gap 19 → AMBIGUOUS; never auto-merge | 100 % |
 | T-L10N-1..8 | localisation | LSAX-LOCALIZATION-CONTRACT.md §7 | as specified |
 | T-ECO-1 | fees | fee formulas with min/max caps, rounding | exact |

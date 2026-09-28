@@ -145,7 +145,16 @@ the audited branch `claude/focused-thompson-ilnspm`, DRAFT1 files, PR #1 or `mai
       RISK-REGISTER (gate semantics: every open P0/P1 blocks SPEC_APPROVED; closure OFFLINE/RUNTIME column),
       risks.md, feasibility.md E7-3. Regression regress/regress_p0_04_gate.py 24/24 PASS (static scan; the same
       scan finds 22 carve-out lines in the DRAFT1 baseline texts, 0 in DRAFT2).
-- [ ] C0-07 Correct P1-01/P1-02 identity safety
+- [x] C0-07 Correct P1-01/P1-02 identity safety
+      D-ID-6 (revised: no continuity/decorator fast path; every observation = full decision over the lossless set),
+      D-ID-7 (K1/K2 lossless search, DEFER <= 256, OVERFLOW -> AMBIGUOUS; lemma L1/L2 exhaustively checked),
+      D-ID-8 (explicit confirmation needs equal plate or occupied continuity — closes lookalike laundering by
+      confirmation). Files: sim/identity_ref.py (new), DOMAIN §4.2-§4.4/§4.7 (C4, C6, C8, C11 rewritten; C21, C22
+      added), MASTER glossary/§05 summary, PERFORMANCE §2/§3, TEST-STRATEGY T-ID-1/T-ID-3, STAGE-ACCEPTANCE,
+      DB-SCHEMA (K1/K2 indexes; also save_ledger/slot_state/apply_status for C0-04/05), RISK-REGISTER R-ID-3,
+      risks.md. Regression regress/regress_p1_01_02_identity.py 34/34 PASS (DRAFT1 defect reproduced in H1, H2, H4,
+      H6, C1, C2; randomized 1500 dense populations: DRAFT2 == unbounded reference, DRAFT1 39 false BIND / 38 false
+      NO MATCH).
 - [ ] C0-08 Correct P1-03 time model
 - [ ] C0-09 Correct P1-04 system journal protocol
 - [ ] C0-10 Correct P1-05 NPC generation identity
@@ -167,8 +176,8 @@ the audited branch `claude/focused-thompson-ilnspm`, DRAFT1 files, PR #1 or `mai
 | P0-02 | REPRODUCED: auditor repro_findings.py (ROOT path only changed) against baseline sim (sources == f6aff47) → output byte-identical to auditor REPRO-OUTPUT.txt (A: roll_forward on C1 + external cash == wallet_after). Root cause: sim `anchor()` continuation branch treats `cash == a and a != b` as APPLIED; TSM §7 row 1 normative. Why the 800-episode sim missed it: EXT changes only during OFFLINE windows, rarely landing exactly on wallet_after. | CORRECTED (C0-04): D-TX-4/5; regress_audit_repro A → RECONCILE(PENDING_UNKNOWN); regress_p0_02 2304/2304 PASS |
 | P0-03 | REPRODUCED: same run, case B byte-identical. Root cause: changed-while-down files become INFERRED ghost entries matched by P-window only (SAVELOAD §4.2/§4.3; sim `mk_ghost`). R-SL-4 covered only running-time copies. Additional (self-found): continuation itself is accepted on P/W correlation (same process) — a foreign save loaded without process restart could also pass the continuation test. | CORRECTED (C0-05): D-SL-13..17; regress_audit_repro B → RECONCILE(UNTRUSTED_PRESENT); regress_p0_03 73/73 PASS; residual R-SL-7 (TM-1) documented |
 | P0-04 | SOURCE VERIFIED: MASTER §28 L345, §30 L378, App. L L432-433; STAGE-ACCEPTANCE L19/34/39; RISK-REGISTER rows B-01, R-SL-2/3/4, R-DB-1, R-COMP-2, R-ENV-1, R-ID-1, R-UI-1, R-COMP-1, OD-3, OD-5, A-SL-4 reference S1a/S1b | CORRECTED (C0-06): D-GATE-1; regress_p0_04_gate 24/24 PASS |
-| P1-01 | SOURCE VERIFIED: DOMAIN §4.2 L95-102 ("can never inherit"), C11 L161; mutation-while-bound accepts plate/colour change under handle+model+time+position continuity | verified |
-| P1-02 | SOURCE VERIFIED: DOMAIN §4.4 L125-128 "bounded to ≤ 32 candidates … nearest last-seen first" before uniqueness gap test | verified |
+| P1-01 | SOURCE VERIFIED: DOMAIN §4.2 L95-102 ("can never inherit"), C11 L161; mutation-while-bound accepts plate/colour change under handle+model+time+position continuity | CORRECTED (C0-07): D-ID-6/D-ID-8; regress_p1_01_02 H1–H8 PASS |
+| P1-02 | SOURCE VERIFIED: DOMAIN §4.4 L125-128 "bounded to ≤ 32 candidates … nearest last-seen first" before uniqueness gap test | CORRECTED (C0-07): D-ID-7 lossless K1/K2; regress_p1_01_02 C1–C6 PASS |
 | P1-03 | SOURCE VERIFIED: TIME L45-46 (MT(P) reconstruction from PT + accepted skip-credit loss) vs L57 (PT "only" anchoring); MASTER App. L L419 | verified |
 | P1-04 | SOURCE VERIFIED: DB-SCHEMA L48 `journal_event.txn_id NOT NULL REFERENCES txn`; L118 event types incl. OdometerCheckpoint/MarketStep/MtCheckpoint/HeatDelta; TSM §3 has no system kind | verified |
 | P1-05 | SOURCE VERIFIED: NPC-GEN L17 and DOMAIN L69 `(campaign_seed, market_day, segment, slot)`; MASTER §11 market step every 60 MT min (24 steps/day); slot scope undefined. REPRODUCED with baseline `npcgen_ref.generate` + `derive_seed("vehicle",…)`: two steps of MT day 42 with step-local slots 0..2 → 3/3 identical VehicleIds and byte-identical vehicles. Also observed: raw FNV-1a ids differ only in a few hex digits (weak avalanche) → correction uses a mixing finaliser | reproduced |

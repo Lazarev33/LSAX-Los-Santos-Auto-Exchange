@@ -1,6 +1,6 @@
 # LSAX — Domain Model, Ownership/Provenance, Vehicle Identity
 
-Document: LSAX-DOMAIN-MODEL.md · Spec: LSAX MASTER SPEC v1.0 DRAFT1 · Status: DRAFT for independent audit
+Document: LSAX-DOMAIN-MODEL.md · Spec: LSAX MASTER SPEC v1.0 DRAFT2 · Status: DRAFT for independent re-audit
 
 ## 1. Principles
 
@@ -71,45 +71,59 @@ All state except Campaign/Timeline/journal/config/catalogue/logs is **timeline-c
 - `LsaxVin`: 17-character display code computed from VehicleId (base-32 alphabet without I/O/Q, check digit at
   position 9). Cosmetic, shown in the inspector and listings; not an in-game plate.
 
-### 4.2 Runtime binding
+### 4.2 Runtime binding (DRAFT2: audit P1-01, D-ID-6, D-ID-8)
 
-`Binding = { handle, vehicleId, modelHash, fpAtBind, bindGt, lastSeenGt, lastPos, confidence, state }`, memory
-only, bounded (≤ 256 bindings; LRU-evict DORMANT first).
+`Binding = { handle, vehicleId, lastSeenGt, lastPos, occupiedSinceBind }`, memory only, bounded (≤ 256 bindings;
+LRU-evict DORMANT first). **A handle, a decorator token and the binding cache are scheduling hints only:** they
+decide which entities are re-observed and in which order candidate records are evaluated. They never decide
+identity, never skip scoring and never keep a binding on their own.
+
+**Every observation** of a world vehicle (bounded cadence, LSAX-PERFORMANCE-BUDGET.md §2) reads the full fingerprint
+(§4.4) and runs the §4.4 decision over the complete, lossless candidate set:
+
+- decision `BIND(v)` and the handle was bound to `v` → stays Bound; changed fields are recorded as `MODIFICATION`
+  events and the stored fingerprint is updated (e.g. a respray keeps the score ≥ 85);
+- decision `BIND(w)`, `w ≠ v` → rebind to `w`; `v` → Dormant (its last-seen context is kept);
+- decision AMBIGUOUS / NO MATCH → the binding is dropped (`v` → Stale, re-verified on its next observation); the
+  entity is Ambiguous or Unregistered. **A reused handle therefore can never inherit a VehicleId** — it gets exactly
+  what its own multifactor evidence yields.
 
 ```mermaid
 stateDiagram-v2
   [*] --> Candidate: entity observed (scan/enter)
-  Candidate --> Bound: score ≥ 85 and unique (gap ≥ 20)
-  Candidate --> Ambiguous: 60 ≤ score < 85 or gap < 20
-  Candidate --> Unregistered: score < 60 for every record
-  Bound --> Bound: continuity verified each observation
-  Bound --> Stale: gap > 2 s or position jump or model changed
-  Stale --> Bound: re-verification score ≥ 85 unique
+  Candidate --> Bound: full evaluation BIND (score ≥ 85, unique gap ≥ 20 over the lossless set)
+  Candidate --> Deferred: K1 larger than one slice (32) — no verdict yet
+  Deferred --> Candidate: all K1 slices evaluated (≤ 256)
+  Candidate --> Ambiguous: 60 ≤ best < 85, not unique, or AMBIGUOUS(OVERFLOW)
+  Candidate --> Unregistered: best < 60 over the lossless set
+  Bound --> Bound: re-observation evaluates BIND to the same record
+  Bound --> Stale: re-observation evaluates anything else (handle reuse, plate change, heavy re-mod)
+  Stale --> Bound: a later full evaluation BINDs
   Stale --> Dormant: entity gone
   Bound --> Dormant: entity no longer exists / out of scan
-  Dormant --> Candidate: matching entity observed near last-seen context
-  Ambiguous --> Bound: explicit player confirmation with exactly one candidate
-  Ambiguous --> Unregistered: player chooses "register as new"
+  Dormant --> Candidate: entity observed
+  Ambiguous --> Bound: explicit player confirmation allowed by D-ID-8
+  Ambiguous --> Unregistered: player chooses "register as new" (provenance UNKNOWN)
 ```
 
-**Continuity rule (handle-reuse protection):** a binding stays valid only while the entity is observed with
-the same handle **and** the same model hash **and** at most 2 000 ms between observations **and** a position
-change ≤ `v_max·Δt + 50 m` (v_max = 150 m/s). Anything else → `Stale` → full fingerprint re-verification. A
-recycled handle therefore can never inherit a VehicleId.
-
-**Mutation while bound:** plate, colour, mod, livery or extra changes observed while Bound (continuity intact) are
-recorded as `ModificationHistory`/`PlateChange` events; the fingerprint is updated. Changes that happen while
-Dormant are only discovered at reacquisition and lower the score (may yield Ambiguous).
+**Explicit confirmation (D-ID-8):** the player may confirm an Ambiguous entity as record `v` only if exactly one
+record scores ≥ 60 for this entity (that record is `v`) **and** either (a) the plate text + style equal `v`'s (only
+colour/mod/cosmetic/context differences) or (b) the player occupied this entity continuously since the last BIND of
+the same handle to `v` (in-place change at a mod shop: plate change, full re-mod). Otherwise only "register as new"
+(provenance UNKNOWN, §5) is offered. Confirmation is an explicit action, never automatic; it records `PLATE_CHANGE`
+/ `MODIFICATION` events.
 
 ### 4.3 Decorator hint
 
 - One int decorator `lsax_rt` holding a **per-session random 31-bit token** mapped in memory to a VehicleId.
-- Fast path: token present and known this session → skip scoring, but still verify model hash and plate.
+- Use: re-observation priority and the first candidate evaluated. It never skips or shortens the §4.4 decision;
+  a stale or colliding token cannot bind a different vehicle (regression H6).
 - Never persisted as identity; tokens from a previous session are meaningless (and decorators are not assumed
-  to survive recreation, E3-5). Registration requires the 3.7 unlock (E3-3); if it fails the fast path is
-  disabled (R-ID-3). Removal must call `DECOR_REMOVE` directly (SHVDN `DecoratorInterface.Remove` bug, E3-2).
+  to survive recreation, E3-5). Registration requires the 3.7 unlock (E3-3); if it fails the hint is disabled
+  (R-ID-3), with no change to identity results. Removal must call `DECOR_REMOVE` directly (SHVDN
+  `DecoratorInterface.Remove` bug, E3-2).
 
-### 4.4 Fingerprint and score
+### 4.4 Fingerprint, score and lossless bounded candidate search (DRAFT2: audit P1-02, D-ID-7)
 
 All fields come from natives verified to exist (feasibility.md E4-1).
 
@@ -123,9 +137,23 @@ All fields come from natives verified to exist (feasibility.md E4-1).
 | Context | last-seen location/kind (garage, parked, impound lot), time since last seen | 15 | 15 if within 50 m of last-seen or at a known garage/impound spawn point; 5 if same district; 0 otherwise |
 
 Score = Σ weights (max 110) × 100 / 110, integer (rdiv). Thresholds: **BIND ≥ 85 and unique** (second-best
-≤ score − 20); **AMBIGUOUS 60–84 or not unique**; **NO MATCH < 60**. Scores are computed only against
-candidates with the same model hash and lifecycle ∈ {ACTIVE, DORMANT, MISSING}, bounded to ≤ 32 candidates
-per evaluation (nearest last-seen first). Constants are tunable; tests in LSAX-TEST-STRATEGY.md T-ID-*.
+≤ score − 20); **AMBIGUOUS 60–84 or not unique**; **NO MATCH < 60**. The verdict is defined over **all** records
+with the same model hash and lifecycle ∈ {ACTIVE, DORMANT, MISSING}; performance bounds may reduce work, never change
+the verdict.
+
+**Lemma (proved; exhaustively checked by `phase0-probes/sim/identity_ref.py::lemma_check`):**
+(L1) a record whose plate differs scores ≤ rdiv(70·100, 110) = 64 < 85 and 64 ≤ 85 − 20, so it can neither BIND nor
+break the uniqueness of a BIND → BIND and uniqueness depend only on **K1 = records with (model, normalised plate)**;
+(L2) a record outside K1 reaches ≥ 60 only with all four colour components equal **and** context 15 → the
+AMBIGUOUS-vs-NO-MATCH decision additionally depends only on **K2 = records with (model, exact colour signature) that
+are context-15-eligible**. K1 and K2 are complete persistent indexes (DB-SCHEMA §3), not nearest-first samples.
+
+Algorithm: evaluate K1 completely — ≤ 32 records in one tick; 33–256 time-sliced at 32 per tick (state Deferred:
+no verdict, no trading, until all slices are done); > 256 → **AMBIGUOUS(OVERFLOW)**. If best(K1) ≥ 60 the verdict is
+final. Otherwise evaluate K2 completely (≤ 64) — any ≥ 60 → AMBIGUOUS, else NO MATCH; K2 > 64 → **AMBIGUOUS(OVERFLOW)**.
+**Truncation never yields BIND or NO MATCH.** Regression: `phase0-probes/regress/regress_p1_01_02_identity.py`
+(>32-candidate cases, overflow, randomized dense populations equal to the unbounded reference; the DRAFT1 nearest-32
+rule reproduces false BIND and false NO MATCH). Constants are tunable only together with a re-proof of L1/L2.
 
 ### 4.5 LSAX-issued plates
 
@@ -151,14 +179,14 @@ impossible for LSAX-originated vehicles. DESIGN DECISION D-ID-5.
 | C1 | Registered car stored in safehouse garage, retrieved | new handle; model, plate, colours, mods exact; context = garage | ≈100, unique | BIND; history `RETRIEVED` |
 | C2 | Car streamed out (drove away 1 km) and back | new handle; exact fingerprint; context within 50 m | 100 | BIND |
 | C3 | Save/load | all bindings dropped at session start | per entity on observation | lazy reacquisition (C1/C2 rules) |
-| C4 | Plate changed at LS Customs while Bound | continuity intact | stays Bound | record `PLATE_CHANGE`, update fingerprint |
+| C4 | Plate changed at LS Customs while Bound (player inside) | plate 0/40, rest exact, occupied continuity | 64 → AMBIGUOUS | explicit confirmation allowed (D-ID-8 b) → `PLATE_CHANGE`; never automatic |
 | C5 | Plate changed by another script while Dormant | plate 0/40, rest exact | 64 → AMBIGUOUS | refuse auto-bind; inspector/UI asks for confirmation (exactly one candidate) |
-| C6 | Respray / new mods at LSC while Bound | continuity | Bound | `MODIFICATION` events, CurrentMods updated |
+| C6 | Respray / new mods at LSC while Bound | re-observation still ≥ 85 unique (respray: 91) | Bound | `MODIFICATION` events, CurrentMods updated; a full re-mod falls below 85 → AMBIGUOUS → confirmation (plate equal, D-ID-8 a) |
 | C7 | Two registered identical cars (same model, legacy default plates, same colours/mods), one reappears | two candidates equal score | not unique → AMBIGUOUS | refuse; offer confirmation only if context separates them (different garages); else "cannot determine" |
-| C8 | Trainer spawns an exact clone while the original is Bound | clone has different handle, no continuity | clone matches a Bound record | clone → `CLONE_SUSPECT`, unregistered; original unaffected |
+| C8 | Trainer spawns an exact clone while the original is Bound | two entities, one record, both 100 | not unique over entities | clone → `CLONE_SUSPECT`, unregistered; original keeps its binding only while its own evaluation stays BIND |
 | C9 | Trainer spawns a clone while original is Dormant | one entity, exact fingerprint | 100 unique | BIND to the clone (indistinguishable). **Accepted limitation:** the original, if it later reappears, becomes the second candidate → both AMBIGUOUS → trading refused until resolved. No value duplication: one VehicleId, one title |
 | C10 | Handle reused by a different model | model gate fails | 0 | binding invalid; new candidate |
-| C11 | Handle reused by same-model traffic car | continuity broken (gap/jump) → Stale → plate mismatch | < 60 | not bound; original → Dormant |
+| C11 | Handle reused by a same-model car (traffic, lookalike, streamed-in) | full evaluation of the new entity: plate mismatch | ≤ 64 | not bound (AMBIGUOUS or Unregistered; confirmation refused, D-ID-8); original → Stale/Dormant |
 | C12 | Random traffic car of same model and colour, default plate | plate differs | ≤ 64 | not bound (Unregistered world vehicle) |
 | C13 | Mission vehicle identical to a registered one | mission gate | excluded | ignore while mission entity |
 | C14 | Vehicle impounded by police, retrieved later | new handle, context impound lot | 100 | BIND; history `IMPOUNDED/RELEASED` |
@@ -168,6 +196,8 @@ impossible for LSAX-originated vehicles. DESIGN DECISION D-ID-5.
 | C18 | Player enters an unregistered traffic car | no record | < 60 | Unregistered world vehicle; stealing rules apply (LSAX-HEAT-AND-UNDERGROUND-MODEL.md) |
 | C19 | Two entities with exactly equal fingerprints observed simultaneously, neither Bound | two entities, one record | 100 each, not unique | AMBIGUOUS for both; refuse |
 | C20 | Fingerprint read fails (entity deleted mid-read) | partial | — | discard observation, no state change |
+| C21 | > 32 same-model records incl. several with the observed (legacy default) plate | complete K1 | per lossless evaluation | time-sliced (Deferred) ≤ 256, else AMBIGUOUS(OVERFLOW); never BIND on a truncated set |
+| C22 | Stale or colliding decorator token on a different vehicle | token maps to record v | per full evaluation | hint only: the entity binds only to what its own evidence yields |
 
 ## 5. Ownership, title/provenance, market state, lifecycle
 

@@ -47,7 +47,7 @@ normative for their domains.
 | Anchoring | Matching the loaded GTA world to one LSAX journal state at session start (SAVELOAD §4.3) |
 | AT | Active Session Time: clamped, pause-excluded ms of this session (TIME §2.1) |
 | AV / BUV / CAV / FMV | Adjusted / Base Used / Condition-Adjusted / Fair Market Value (VALUATION §1) |
-| Binding | In-memory link handle → VehicleId with continuity checks; never persisted as identity |
+| Binding | In-memory cache handle → VehicleId; a scheduling hint only — every observation re-runs the full multifactor decision (DOMAIN §4.2); never persisted as identity |
 | bp | basis point, 10 000 bp = 1.0 |
 | Campaign | One GTA story playthrough as seen by LSAX; root of a timeline tree |
 | Commit | A committed LSAX logical transaction recorded on a timeline with its domain events |
@@ -90,7 +90,8 @@ detectable (invariant 8) — none are in scope for v1.
 
 Invariants 1–4 hold by construction: handles are runtime only; decorators are session hints (and SHVDN's
 `DecoratorInterface.Remove` bug is avoided, E3-2); identity = VehicleId + fingerprint score (BIND ≥ 85 unique,
-AMBIGUOUS 60–84 or gap < 20, NO MATCH < 60) + continuity rule (handle-reuse protection) + 20-row collision matrix;
+AMBIGUOUS 60–84 or gap < 20, NO MATCH < 60) over a lossless bounded candidate set (D-ID-7) + full re-evaluation on every
+observation, so a reused handle never inherits (D-ID-6) + 22-row collision matrix;
 ambiguous → never auto-merge, safe refusal.
 
 ## 05 Save/Load Persistence Feasibility → `LSAX-SAVELOAD-FEASIBILITY.md`
