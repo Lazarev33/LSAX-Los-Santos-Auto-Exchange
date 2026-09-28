@@ -1,0 +1,195 @@
+================================================================================
+FILE <scratch>/ref_sc/scripts/SellCars.dll
+ASSEMBLY SellCars 1 0 0 0
+-- AssemblyRef
+   mscorlib 4 0 0 0
+   ScriptHookVDotNet2 2 11 6 0
+-- TypeDef (fields/methods)
+  TYPE .<Module> : SellCars
+  TYPE SellCars.SellCars : Script
+     field st
+     field pedlist
+     field gtimer
+     field h
+     field l
+     field p
+     field he
+     field tped
+     field lootcam
+     field m
+     field objblip
+     field objblips
+     field temproprdr
+     field ab
+     field ac
+     method .ctor
+     method OnShutdown
+     method onTick
+     method lineChanger
+     method Displayexit
+     method spawnblip
+     method spawnproptolistrdr
+     method spawnpedtolist
+     method f
+     method g
+     method a
+-- TypeRef
+   System.Runtime.CompilerServices.CompilationRelaxationsAttribute
+   System.Runtime.CompilerServices.RuntimeCompatibilityAttribute
+   System.Diagnostics.DebuggableAttribute
+   .DebuggingModes
+   System.Reflection.AssemblyTitleAttribute
+   System.Reflection.AssemblyDescriptionAttribute
+   System.Reflection.AssemblyConfigurationAttribute
+   System.Reflection.AssemblyCompanyAttribute
+   System.Reflection.AssemblyProductAttribute
+   System.Reflection.AssemblyCopyrightAttribute
+   System.Reflection.AssemblyTrademarkAttribute
+   System.Runtime.InteropServices.ComVisibleAttribute
+   System.Runtime.InteropServices.GuidAttribute
+   System.Reflection.AssemblyFileVersionAttribute
+   System.Runtime.Versioning.TargetFrameworkAttribute
+   GTA.Script
+   System.Collections.Generic.List`1
+   GTA.Ped
+   GTA.Vehicle
+   GTA.Math.Vector3
+   GTA.Blip
+   GTA.Prop
+   System.Object
+   System.EventArgs
+   .Enumerator
+   GTA.BlipColor
+   GTA.Model
+   System.EventHandler
+   GTA.Native.InputArgument
+   GTA.Native.Function
+   GTA.Native.Hash
+   GTA.Entity
+   System.IDisposable
+   GTA.Game
+   GTA.Player
+   GTA.Control
+   GTA.UI
+   GTA.Notification
+   GTA.VehicleLockStatus
+   GTA.Tasks
+   GTA.VehicleSeat
+   GTA.AnimationFlags
+   System.IO.File
+   GTA.World
+   GTA.BlipSprite
+-- MemberRef
+   System.Runtime.CompilerServices.CompilationRelaxationsAttribute::.ctor
+   System.Runtime.CompilerServices.RuntimeCompatibilityAttribute::.ctor
+   System.Diagnostics.DebuggableAttribute::.ctor
+   System.Reflection.AssemblyTitleAttribute::.ctor
+   System.Reflection.AssemblyDescriptionAttribute::.ctor
+   System.Reflection.AssemblyConfigurationAttribute::.ctor
+   System.Reflection.AssemblyCompanyAttribute::.ctor
+   System.Reflection.AssemblyProductAttribute::.ctor
+   System.Reflection.AssemblyCopyrightAttribute::.ctor
+   System.Reflection.AssemblyTrademarkAttribute::.ctor
+   System.Runtime.InteropServices.ComVisibleAttribute::.ctor
+   System.Runtime.InteropServices.GuidAttribute::.ctor
+   System.Reflection.AssemblyFileVersionAttribute::.ctor
+   System.Runtime.Versioning.TargetFrameworkAttribute::.ctor
+   .::.ctor
+   GTA.Script::.ctor
+   System.EventHandler::.ctor
+   GTA.Script::add_Tick
+   GTA.Script::add_Aborted
+   .::GetEnumerator
+   .::get_Current
+   GTA.Native.InputArgument::op_Implicit
+   GTA.Native.Function::Call
+   GTA.Entity::Delete
+   .::MoveNext
+   System.IDisposable::Dispose
+   .::Clear
+   GTA.Script::Wait
+   GTA.Math.Vector3::.ctor
+   GTA.Game::get_GameTime
+   GTA.Game::get_Player
+   GTA.Player::get_Character
+   GTA.Entity::get_FreezePosition
+   GTA.Entity::get_Position
+   GTA.Math.Vector3::DistanceTo
+   GTA.Entity::set_FreezePosition
+   GTA.Game::IsControlJustPressed
+   GTA.Ped::get_LastVehicle
+   GTA.Entity::get_IsAlive
+   GTA.Entity::get_Heading
+   GTA.UI::Notify
+   GTA.Entity::get_IsDead
+   GTA.Vehicle::set_LockStatus
+   GTA.Math.Vector3::X
+   GTA.Math.Vector3::Y
+   GTA.Math.Vector3::Z
+   GTA.Entity::get_Rotation
+   GTA.Ped::get_Task
+   GTA.Tasks::ClearAll
+   GTA.Tasks::EnterVehicle
+   GTA.Ped::SetIntoVehicle
+   GTA.Ped::IsInVehicle
+   GTA.Tasks::DriveTo
+   GTA.Game::FadeScreenOut
+   GTA.Entity::set_Position
+   GTA.Entity::set_Heading
+   GTA.Tasks::PlayAnimation
+   GTA.Game::FadeScreenIn
+   GTA.Player::get_Money
+   GTA.Player::set_Money
+   System.IO.File::ReadAllLines
+   System.IO.File::WriteAllLines
+   GTA.UI::ShowHelpMessage
+   GTA.World::CreateBlip
+   GTA.Blip::Exists
+   GTA.Blip::set_Sprite
+   GTA.Blip::set_Color
+   GTA.Blip::set_Name
+   GTA.Blip::set_ShowRoute
+   GTA.Blip::set_IsShortRange
+   .::Add
+   GTA.Model::.ctor
+   GTA.Model::Request
+   GTA.Model::get_IsValid
+   GTA.Model::get_IsInCdImage
+   GTA.Model::get_IsLoaded
+   GTA.World::CreateProp
+   GTA.Entity::set_HasCollision
+   GTA.Entity::set_LodDistance
+   GTA.World::CreatePed
+   GTA.Ped::RandomizeOutfit
+   GTA.Entity::set_IsInvincible
+   GTA.Entity::AddBlip
+   GTA.Entity::get_CurrentBlip
+-- UserStrings
+   US: 'missheistpaletoscoresetup_setup2'
+   US: 'missmic_4premierjimwaitbef_prem'
+   US: 'anim@scripted@robbery@tun_prep_pris_ig1_handover@'
+   US: 'Press ~INPUT_CONTEXT~ to sell your car for $3000.'
+   US: 'GENERIC_HI'
+   US: 'SPEECH_PARAMS_FORCE'
+   US: "Your last car isn't close enough."
+   US: 'Press ~INPUT_CONTEXT~ to confirm you want to sell your car $3000.'
+   US: 'prop_cash_envelope_01'
+   US: 'action_dealer'
+   US: 'action_mwxgoon'
+   US: 'action_paperbag'
+   US: 'GENERIC_HOWS_IT_GOING'
+   US: 'GENERIC_THANKS'
+   US: 'SPEECH_PARAMS_FORCE_SHOUTED_CRITICAL'
+   US: 'Error'
+   US: 'STRING'
+   US: 'cops_response_waitloop_bank_clerk3'
+   US: 'cops_response_waitloop_bank_clerk2'
+   US: 'cops_response_waitloop_bank_manager'
+   US: 'wait_base'
+   US: 'a_m_m_prolhost_01'
+   US: 'a_m_m_soucent_02'
+   US: 'a_m_o_ktown_01'
+   US: 'a_m_y_business_03'
+   US: 'a_m_y_business_02'
+   US: 'a_m_y_smartcaspat_01'
+   US: 'Illegal Car Market'
