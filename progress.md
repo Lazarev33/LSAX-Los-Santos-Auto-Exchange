@@ -103,3 +103,42 @@ feasibility.md and continue from the first item not marked [x]. Do not restart P
 - SPEC_APPROVED is NOT self-granted. Gate item "save/load persistence model proven feasible" = FAIL (BLOCKER B-01).
 - Next action for the project owner: run phase0-probes (P-SL-01 required, P-DB-01 required, P-ID-01/P-SL-02 optional)
   on the target PC per phase0-probes/README-PROBES.md, then send logs back for B-01 closure.
+
+---
+
+# PHASE 0 — CORRECTION PASS 1 (durable state)
+
+Recovery rule: continue from the first C0 item not marked [x]; do NOT restart the correction pass; never modify
+the audited branch `claude/focused-thompson-ilnspm`, DRAFT1 files, PR #1 or `main`.
+
+- Correction baseline (audited head): f6aff47d1dbea94576d6aae1f60bd17102d549cc
+- Correction branch: claude/phase0-correction-1 (created from exactly the baseline, 2026-09-28)
+- DRAFT1 release SHA-256: 281f52f6e989ed7de93d4af7d61e25e9a2369fa7d74856f5d666357896cccd16
+  (release/ file == uploaded copy == `git show f6aff47:release/...` — verified identical)
+- Audit bundle: LSAX-PHASE0-INDEPENDENT-AUDIT.zip SHA-256 35d3c55d503ad398e574d267fdd59ea0d15882dcd2573548c7a3399b08995bb2
+- Remote refs at start: audited branch f6aff47, refs/pull/1/head f6aff47, main ec56878 (untouched)
+- Audit verdict: CORRECTION_REQUIRED — SPEC_APPROVED BLOCKED (4 P0, 6 P1, 1 P2)
+
+## C0 checklist
+- [x] C0-01 Verify audited baseline and create correction branch
+- [ ] C0-02 Read full independent audit bundle
+- [ ] C0-03 Reproduce/source-verify every finding
+- [ ] C0-04 Correct P0-02 transaction recovery
+- [ ] C0-05 Correct P0-03 save lineage
+- [ ] C0-06 Remove P0-04 Stage-1a exception
+- [ ] C0-07 Correct P1-01/P1-02 identity safety
+- [ ] C0-08 Correct P1-03 time model
+- [ ] C0-09 Correct P1-04 system journal protocol
+- [ ] C0-10 Correct P1-05 NPC generation identity
+- [ ] C0-11 Correct P1-06 LEGACY provenance
+- [ ] C0-12 Correct P2-01 backup architecture
+- [ ] C0-13 Reconcile all affected documents
+- [ ] C0-14 Add/run deterministic regression suite
+- [ ] C0-15 Review/prepare P-SL-01 and P-DB-01
+- [ ] C0-16 Full xref/static/spec self-audit
+- [ ] C0-17 Rebuild DRAFT2 package and hashes
+- [ ] C0-18 Push correction branch
+- [ ] C0-19 Report final status
+
+## Finding ledger (verification → correction → regression → closure)
+(filled per finding below)
