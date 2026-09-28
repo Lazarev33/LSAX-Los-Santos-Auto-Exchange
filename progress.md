@@ -77,7 +77,13 @@ feasibility.md and continue from the first item not marked [x]. Do not restart P
           [x] run_all.py -> evidence/sim/*.out.md + SUMMARY.md (all PASS, ~2m15s)
       [x] F-e Record results in feasibility.md (E8); decisions.md D-SL-*/D-TX-*/D-VAL/D-GEN/D-HEAT
 - [x] P0-05 (closed; runtime proof pending = BLOCKER B-01, owner must run phase0-probes on target PC)
-- [ ] P0-06 Spec documents
+- [ ] P0-06 Spec documents (spec/)
+      [x] LSAX-REFERENCE-REVIEW.md  [x] LSAX-SAVELOAD-FEASIBILITY.md  [x] LSAX-TIME-MODEL.md
+      [x] LSAX-DOMAIN-MODEL.md      [x] LSAX-TRANSACTION-STATE-MACHINE.md  [x] LSAX-DB-SCHEMA-DRAFT.md
+      [ ] LSAX-VALUATION-MODEL.md   [ ] LSAX-NPC-GENERATION-MODEL.md  [ ] LSAX-HEAT-AND-UNDERGROUND-MODEL.md
+      [ ] LSAX-LOCALIZATION-CONTRACT.md  [ ] LSAX-COMPATIBILITY-CONTRACT.md  [ ] LSAX-PERFORMANCE-BUDGET.md
+      [ ] LSAX-TEST-STRATEGY.md     [ ] LSAX-STAGE-ACCEPTANCE.md  [ ] LSAX-RISK-REGISTER.md
+      [ ] LSAX-MASTER-SPEC-v1.0.md (sections 00-30 + appendices, SPEC_APPROVED checklist)
 - [ ] P0-07 Self-audit / consistency pass
 - [ ] P0-08 SHA-256 manifest + LSAX-MASTER-SPEC-v1.0-DRAFT1.zip
 - [ ] P0-09 Commit + push to claude/focused-thompson-ilnspm
