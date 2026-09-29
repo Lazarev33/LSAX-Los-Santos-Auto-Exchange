@@ -1,0 +1,226 @@
+config	test_id	repetition	local_time	owner_action	result	notes
+FULL-MODPACK	S1	1		Pre-flight: backups, HASH-PROBES, PREPARE-EVIDENCE-FOLDER, ENVIRONMENT.txt		
+FULL-MODPACK	S2	1		INSTALL-PROBES + HASH-PROBES -GtaRoot		
+FULL-MODPACK	S3	1		START-NEW-RUN SMOKE		
+FULL-MODPACK	S4	1		Start game, Story Mode, ListScripts(), CHECK-LOG S4		
+FULL-MODPACK	S5	1		Bed save to test slot, CHECK-LOG S5		
+FULL-MODPACK	S6	1		Load test slot, CHECK-LOG S6		
+FULL-MODPACK	S7	1		Console Reload(), CHECK-LOG S7		
+FULL-MODPACK	S8	1		One character switch, CHECK-LOG S8		
+FULL-MODPACK	S9	1		Profile PDB01, restart game, Reload(), CHECK-LOG S9		
+FULL-MODPACK	S10	1		Quit, profile PSL01, CHECK-LOG S10, COLLECT-EVIDENCE SMOKE		
+FULL-MODPACK	T1	1		Start the game; Story Mode loads the latest save		
+FULL-MODPACK	T1	2		Start the game; Story Mode loads the latest save		
+FULL-MODPACK	T1	3		Start the game; Story Mode loads the latest save		
+FULL-MODPACK	T1	4		Start the game; Story Mode loads the latest save		
+FULL-MODPACK	T1	5		Start the game; Story Mode loads the latest save		
+FULL-MODPACK	T1	6		Start the game; Story Mode loads the latest save		
+FULL-MODPACK	T1	7		Start the game; Story Mode loads the latest save		
+FULL-MODPACK	T1	8		Start the game; Story Mode loads the latest save		
+FULL-MODPACK	T1	9		Start the game; Story Mode loads the latest save		
+FULL-MODPACK	T1	10		Start the game; Story Mode loads the latest save		
+FULL-MODPACK	T2	1		Manual save at a safehouse bed into slot S		
+FULL-MODPACK	T2	2		Manual save at a safehouse bed into slot S		
+FULL-MODPACK	T2	3		Manual save at a safehouse bed into slot S		
+FULL-MODPACK	T2	4		Manual save at a safehouse bed into slot S		
+FULL-MODPACK	T2	5		Manual save at a safehouse bed into slot S		
+FULL-MODPACK	T2	6		Manual save at a safehouse bed into slot S		
+FULL-MODPACK	T2	7		Manual save at a safehouse bed into slot S		
+FULL-MODPACK	T2	8		Manual save at a safehouse bed into slot S		
+FULL-MODPACK	T2	9		Manual save at a safehouse bed into slot S		
+FULL-MODPACK	T2	10		Manual save at a safehouse bed into slot S		
+FULL-MODPACK	T3	1		Phone quick-save (if available) into slot S2		
+FULL-MODPACK	T3	2		Phone quick-save (if available) into slot S2		
+FULL-MODPACK	T3	3		Phone quick-save (if available) into slot S2		
+FULL-MODPACK	T3	4		Phone quick-save (if available) into slot S2		
+FULL-MODPACK	T3	5		Phone quick-save (if available) into slot S2		
+FULL-MODPACK	T3	6		Phone quick-save (if available) into slot S2		
+FULL-MODPACK	T3	7		Phone quick-save (if available) into slot S2		
+FULL-MODPACK	T3	8		Phone quick-save (if available) into slot S2		
+FULL-MODPACK	T3	9		Phone quick-save (if available) into slot S2		
+FULL-MODPACK	T3	10		Phone quick-save (if available) into slot S2		
+FULL-MODPACK	T4	1		Finish a mission / activity that autosaves		
+FULL-MODPACK	T4	2		Finish a mission / activity that autosaves		
+FULL-MODPACK	T4	3		Finish a mission / activity that autosaves		
+FULL-MODPACK	T4	4		Finish a mission / activity that autosaves		
+FULL-MODPACK	T4	5		Finish a mission / activity that autosaves		
+FULL-MODPACK	T4	6		Finish a mission / activity that autosaves		
+FULL-MODPACK	T4	7		Finish a mission / activity that autosaves		
+FULL-MODPACK	T4	8		Finish a mission / activity that autosaves		
+FULL-MODPACK	T4	9		Finish a mission / activity that autosaves		
+FULL-MODPACK	T4	10		Finish a mission / activity that autosaves		
+FULL-MODPACK	T5	1		Change cash, drive >= 1 km, wait >= 2 in-game hours		
+FULL-MODPACK	T5	2		Change cash, drive >= 1 km, wait >= 2 in-game hours		
+FULL-MODPACK	T5	3		Change cash, drive >= 1 km, wait >= 2 in-game hours		
+FULL-MODPACK	T5	4		Change cash, drive >= 1 km, wait >= 2 in-game hours		
+FULL-MODPACK	T5	5		Change cash, drive >= 1 km, wait >= 2 in-game hours		
+FULL-MODPACK	T5	6		Change cash, drive >= 1 km, wait >= 2 in-game hours		
+FULL-MODPACK	T5	7		Change cash, drive >= 1 km, wait >= 2 in-game hours		
+FULL-MODPACK	T5	8		Change cash, drive >= 1 km, wait >= 2 in-game hours		
+FULL-MODPACK	T5	9		Change cash, drive >= 1 km, wait >= 2 in-game hours		
+FULL-MODPACK	T5	10		Change cash, drive >= 1 km, wait >= 2 in-game hours		
+FULL-MODPACK	T6	1		Pause > Game > Load Game > slot S		
+FULL-MODPACK	T6	2		Pause > Game > Load Game > slot S		
+FULL-MODPACK	T6	3		Pause > Game > Load Game > slot S		
+FULL-MODPACK	T6	4		Pause > Game > Load Game > slot S		
+FULL-MODPACK	T6	5		Pause > Game > Load Game > slot S		
+FULL-MODPACK	T6	6		Pause > Game > Load Game > slot S		
+FULL-MODPACK	T6	7		Pause > Game > Load Game > slot S		
+FULL-MODPACK	T6	8		Pause > Game > Load Game > slot S		
+FULL-MODPACK	T6	9		Pause > Game > Load Game > slot S		
+FULL-MODPACK	T6	10		Pause > Game > Load Game > slot S		
+FULL-MODPACK	T7	1		Load slot S again (x2)		2 loads in this repetition
+FULL-MODPACK	T7	2		Load slot S again (x2)		2 loads in this repetition
+FULL-MODPACK	T7	3		Load slot S again (x2)		2 loads in this repetition
+FULL-MODPACK	T7	4		Load slot S again (x2)		2 loads in this repetition
+FULL-MODPACK	T7	5		Load slot S again (x2)		2 loads in this repetition
+FULL-MODPACK	T7	6		Load slot S again (x2)		2 loads in this repetition
+FULL-MODPACK	T7	7		Load slot S again (x2)		2 loads in this repetition
+FULL-MODPACK	T7	8		Load slot S again (x2)		2 loads in this repetition
+FULL-MODPACK	T7	9		Load slot S again (x2)		2 loads in this repetition
+FULL-MODPACK	T7	10		Load slot S again (x2)		2 loads in this repetition
+FULL-MODPACK	T8	1		Die, then get arrested		
+FULL-MODPACK	T8	2		Die, then get arrested		
+FULL-MODPACK	T8	3		Die, then get arrested		
+FULL-MODPACK	T8	4		Die, then get arrested		
+FULL-MODPACK	T8	5		Die, then get arrested		
+FULL-MODPACK	T8	6		Die, then get arrested		
+FULL-MODPACK	T8	7		Die, then get arrested		
+FULL-MODPACK	T8	8		Die, then get arrested		
+FULL-MODPACK	T8	9		Die, then get arrested		
+FULL-MODPACK	T8	10		Die, then get arrested		
+FULL-MODPACK	T9	1		Fail a mission > Retry		
+FULL-MODPACK	T9	2		Fail a mission > Retry		
+FULL-MODPACK	T9	3		Fail a mission > Retry		
+FULL-MODPACK	T9	4		Fail a mission > Retry		
+FULL-MODPACK	T9	5		Fail a mission > Retry		
+FULL-MODPACK	T9	6		Fail a mission > Retry		
+FULL-MODPACK	T9	7		Fail a mission > Retry		
+FULL-MODPACK	T9	8		Fail a mission > Retry		
+FULL-MODPACK	T9	9		Fail a mission > Retry		
+FULL-MODPACK	T9	10		Fail a mission > Retry		
+FULL-MODPACK	T10	1		Switch Michael > Franklin > Trevor > Michael		
+FULL-MODPACK	T10	2		Switch Michael > Franklin > Trevor > Michael		
+FULL-MODPACK	T10	3		Switch Michael > Franklin > Trevor > Michael		
+FULL-MODPACK	T10	4		Switch Michael > Franklin > Trevor > Michael		
+FULL-MODPACK	T10	5		Switch Michael > Franklin > Trevor > Michael		
+FULL-MODPACK	T10	6		Switch Michael > Franklin > Trevor > Michael		
+FULL-MODPACK	T10	7		Switch Michael > Franklin > Trevor > Michael		
+FULL-MODPACK	T10	8		Switch Michael > Franklin > Trevor > Michael		
+FULL-MODPACK	T10	9		Switch Michael > Franklin > Trevor > Michael		
+FULL-MODPACK	T10	10		Switch Michael > Franklin > Trevor > Michael		
+FULL-MODPACK	T11	1		SHVDN console Reload()		
+FULL-MODPACK	T11	2		SHVDN console Reload()		
+FULL-MODPACK	T11	3		SHVDN console Reload()		
+FULL-MODPACK	T11	4		SHVDN console Reload()		
+FULL-MODPACK	T11	5		SHVDN console Reload()		
+FULL-MODPACK	T11	6		SHVDN console Reload()		
+FULL-MODPACK	T11	7		SHVDN console Reload()		
+FULL-MODPACK	T11	8		SHVDN console Reload()		
+FULL-MODPACK	T11	9		SHVDN console Reload()		
+FULL-MODPACK	T11	10		SHVDN console Reload()		
+FULL-MODPACK	T12	1		Quit without saving; restart; load slot S		
+FULL-MODPACK	T12	2		Quit without saving; restart; load slot S		
+FULL-MODPACK	T12	3		Quit without saving; restart; load slot S		
+FULL-MODPACK	T12	4		Quit without saving; restart; load slot S		
+FULL-MODPACK	T12	5		Quit without saving; restart; load slot S		
+FULL-MODPACK	T12	6		Quit without saving; restart; load slot S		
+FULL-MODPACK	T12	7		Quit without saving; restart; load slot S		
+FULL-MODPACK	T12	8		Quit without saving; restart; load slot S		
+FULL-MODPACK	T12	9		Quit without saving; restart; load slot S		
+FULL-MODPACK	T12	10		Quit without saving; restart; load slot S		
+FULL-MODPACK	T13	1		Sleep >= 6 in-game hours, then save into slot S3		
+FULL-MODPACK	T13	2		Sleep >= 6 in-game hours, then save into slot S3		
+FULL-MODPACK	T13	3		Sleep >= 6 in-game hours, then save into slot S3		
+FULL-MODPACK	T13	4		Sleep >= 6 in-game hours, then save into slot S3		
+FULL-MODPACK	T13	5		Sleep >= 6 in-game hours, then save into slot S3		
+FULL-MODPACK	T13	6		Sleep >= 6 in-game hours, then save into slot S3		
+FULL-MODPACK	T13	7		Sleep >= 6 in-game hours, then save into slot S3		
+FULL-MODPACK	T13	8		Sleep >= 6 in-game hours, then save into slot S3		
+FULL-MODPACK	T13	9		Sleep >= 6 in-game hours, then save into slot S3		
+FULL-MODPACK	T13	10		Sleep >= 6 in-game hours, then save into slot S3		
+FULL-MODPACK	T14	1		Game running: copy backed-up save file over slot S4 (Explorer)		
+FULL-MODPACK	T14	2		Game running: copy backed-up save file over slot S4 (Explorer)		
+FULL-MODPACK	T14	3		Game running: copy backed-up save file over slot S4 (Explorer)		
+FULL-MODPACK	T14	4		Game running: copy backed-up save file over slot S4 (Explorer)		
+FULL-MODPACK	T14	5		Game running: copy backed-up save file over slot S4 (Explorer)		
+FULL-MODPACK	T14	6		Game running: copy backed-up save file over slot S4 (Explorer)		
+FULL-MODPACK	T14	7		Game running: copy backed-up save file over slot S4 (Explorer)		
+FULL-MODPACK	T14	8		Game running: copy backed-up save file over slot S4 (Explorer)		
+FULL-MODPACK	T14	9		Game running: copy backed-up save file over slot S4 (Explorer)		
+FULL-MODPACK	T14	10		Game running: copy backed-up save file over slot S4 (Explorer)		
+FULL-MODPACK	T15	1		Load slot S4 (copied file)		
+FULL-MODPACK	T15	2		Load slot S4 (copied file)		
+FULL-MODPACK	T15	3		Load slot S4 (copied file)		
+FULL-MODPACK	T15	4		Load slot S4 (copied file)		
+FULL-MODPACK	T15	5		Load slot S4 (copied file)		
+FULL-MODPACK	T15	6		Load slot S4 (copied file)		
+FULL-MODPACK	T15	7		Load slot S4 (copied file)		
+FULL-MODPACK	T15	8		Load slot S4 (copied file)		
+FULL-MODPACK	T15	9		Load slot S4 (copied file)		
+FULL-MODPACK	T15	10		Load slot S4 (copied file)		
+FULL-MODPACK	T16	1		Start a New Game (disposable profile / after backup)		
+FULL-MODPACK	T16	2		Start a New Game (disposable profile / after backup)		
+FULL-MODPACK	T16	3		Start a New Game (disposable profile / after backup)		
+FULL-MODPACK	T16	4		Start a New Game (disposable profile / after backup)		
+FULL-MODPACK	T16	5		Start a New Game (disposable profile / after backup)		
+FULL-MODPACK	T16	6		Start a New Game (disposable profile / after backup)		
+FULL-MODPACK	T16	7		Start a New Game (disposable profile / after backup)		
+FULL-MODPACK	T16	8		Start a New Game (disposable profile / after backup)		
+FULL-MODPACK	T16	9		Start a New Game (disposable profile / after backup)		
+FULL-MODPACK	T16	10		Start a New Game (disposable profile / after backup)		
+FULL-MODPACK	T17	1		30 min play with cash-writing mods, 10 saves + 10 loads interleaved		repetitions: see U-01 (default 10)
+FULL-MODPACK	T17	2		30 min play with cash-writing mods, 10 saves + 10 loads interleaved		repetitions: see U-01 (default 10)
+FULL-MODPACK	T17	3		30 min play with cash-writing mods, 10 saves + 10 loads interleaved		repetitions: see U-01 (default 10)
+FULL-MODPACK	T17	4		30 min play with cash-writing mods, 10 saves + 10 loads interleaved		repetitions: see U-01 (default 10)
+FULL-MODPACK	T17	5		30 min play with cash-writing mods, 10 saves + 10 loads interleaved		repetitions: see U-01 (default 10)
+FULL-MODPACK	T17	6		30 min play with cash-writing mods, 10 saves + 10 loads interleaved		repetitions: see U-01 (default 10)
+FULL-MODPACK	T17	7		30 min play with cash-writing mods, 10 saves + 10 loads interleaved		repetitions: see U-01 (default 10)
+FULL-MODPACK	T17	8		30 min play with cash-writing mods, 10 saves + 10 loads interleaved		repetitions: see U-01 (default 10)
+FULL-MODPACK	T17	9		30 min play with cash-writing mods, 10 saves + 10 loads interleaved		repetitions: see U-01 (default 10)
+FULL-MODPACK	T17	10		30 min play with cash-writing mods, 10 saves + 10 loads interleaved		repetitions: see U-01 (default 10)
+FULL-MODPACK	PDB-1	1		Profile PDB01-STEP1, fresh game start, 60 s, quit		
+FULL-MODPACK	PDB-2	1		Profile PDB01, game start, 60 s		
+FULL-MODPACK	PDB-3R	1		Console Reload()		
+FULL-MODPACK	PDB-3R	2		Console Reload()		
+FULL-MODPACK	PDB-3R	3		Console Reload()		
+FULL-MODPACK	PDB-3R	4		Console Reload()		
+FULL-MODPACK	PDB-3R	5		Console Reload()		
+FULL-MODPACK	PDB-3R	6		Console Reload()		
+FULL-MODPACK	PDB-3R	7		Console Reload()		
+FULL-MODPACK	PDB-3R	8		Console Reload()		
+FULL-MODPACK	PDB-3R	9		Console Reload()		
+FULL-MODPACK	PDB-3R	10		Console Reload()		
+FULL-MODPACK	PDB-3R	11		Console Reload()		
+FULL-MODPACK	PDB-3R	12		Console Reload()		
+FULL-MODPACK	PDB-3R	13		Console Reload()		
+FULL-MODPACK	PDB-3R	14		Console Reload()		
+FULL-MODPACK	PDB-3R	15		Console Reload()		
+FULL-MODPACK	PDB-3R	16		Console Reload()		
+FULL-MODPACK	PDB-3R	17		Console Reload()		
+FULL-MODPACK	PDB-3R	18		Console Reload()		
+FULL-MODPACK	PDB-3R	19		Console Reload()		
+FULL-MODPACK	PDB-3R	20		Console Reload()		
+FULL-MODPACK	PDB-3L	1		Load a save (pause menu)		
+FULL-MODPACK	PDB-3L	2		Load a save (pause menu)		
+FULL-MODPACK	PDB-3L	3		Load a save (pause menu)		
+FULL-MODPACK	PDB-3L	4		Load a save (pause menu)		
+FULL-MODPACK	PDB-3L	5		Load a save (pause menu)		
+FULL-MODPACK	PDB-4R	1		Profile PDB01-LEAK: console Reload()		
+FULL-MODPACK	PDB-4R	2		Profile PDB01-LEAK: console Reload()		
+FULL-MODPACK	PDB-4R	3		Profile PDB01-LEAK: console Reload()		
+FULL-MODPACK	PDB-4R	4		Profile PDB01-LEAK: console Reload()		
+FULL-MODPACK	PDB-4R	5		Profile PDB01-LEAK: console Reload()		
+FULL-MODPACK	ID-TAG	1		Enter personal vehicle, F10		P-ID-01 configuration: see U-11
+FULL-MODPACK	ID-DRIVE	1		Drive >= 600 m away and back		P-ID-01 configuration: see U-11
+FULL-MODPACK	ID-GARAGE	1		Store in safehouse garage and retrieve		P-ID-01 configuration: see U-11
+FULL-MODPACK	ID-SAVELOAD	1		Save / load		P-ID-01 configuration: see U-11
+FULL-MODPACK	ID-IMPOUND	1		Get impounded and retrieve		P-ID-01 configuration: see U-11
+FULL-MODPACK	ID-LSC	1		LS Customs respray + plate		P-ID-01 configuration: see U-11
+FULL-MODPACK	ID-SAMEMODEL	1		Leave it; same-model traffic car passes nearby		P-ID-01 configuration: see U-11
+FULL-MODPACK	ID-STORY-M	1		Enter Michael's story personal vehicle		P-ID-01 configuration: see U-11
+FULL-MODPACK	ID-STORY-F	1		Enter Franklin's story personal vehicle		P-ID-01 configuration: see U-11
+FULL-MODPACK	ID-STORY-T	1		Enter Trevor's story personal vehicle		P-ID-01 configuration: see U-11
+FULL-MODPACK	ID-STOLEN	1		Enter a stolen street car		P-ID-01 configuration: see U-11
+FULL-MODPACK	ID-TRAINER	1		Enter a trainer-spawned car		P-ID-01 configuration: see U-11
+FULL-MODPACK	ID-ADDON	1		Enter an add-on car		P-ID-01 configuration: see U-11

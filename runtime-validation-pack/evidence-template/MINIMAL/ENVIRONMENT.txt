@@ -1,0 +1,24 @@
+# LSAX PHASE 0 RUNTIME VALIDATION - ENVIRONMENT (заполняет владелец вручную / filled in by the owner)
+# Не пишите сюда личные данные (имя, e-mail, пути с именем пользователя). / No personal data.
+# Кодировка UTF-8. Один файл на конфигурацию.
+
+Configuration (FULL-MODPACK / MINIMAL): MINIMAL
+GTA build (свойства GTA5.exe, цель 1.0.3725.0): 
+GTA edition (Legacy / Enhanced; цель Legacy): 
+ScriptHookV version: 
+ScriptHookVDotNet version (точно, с номером nightly; также печатается в CHECK-LOG S4): 
+Windows version (например Windows 11 23H2 build 22631.xxxx): 
+Full modpack list (по одному моду в строке, с версией; MINIMAL: только ScriptHookV + SHVDN + зонды):
+  - 
+  - 
+Probe package SHA-256 (LSAX-PHASE0-RUNTIME-VALIDATION-PACK.zip): 
+Payload used (PACK / LOCAL BUILD): 
+LsaxPhase0Probe.dll SHA-256: 
+LsaxPhase0SqliteProbe.dll SHA-256: 
+Test start (местное время, YYYY-MM-DD HH:MM): 
+Test end (местное время, YYYY-MM-DD HH:MM): 
+Backups made before testing: profile/saves (yes/no): 
+Backups made before testing: scripts folder (yes/no): 
+Important saves kept in 2+ copies (yes/no): 
+Test save slots used (S, S2, S3, S4 - номера слотов): 
+Notes: 
